@@ -1,0 +1,228 @@
+# =============================================================================
+# HookFlow — .gitignore
+# Stack: ASP.NET Core (.NET 8) + React (Vite) + PostgreSQL + Docker
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# .NET / C# / ASP.NET Core
+# -----------------------------------------------------------------------------
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Build output
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio
+.vs/
+.vscode/
+*.rsuser
+*.dbmdl
+*.dbproj.schemaview
+*.jfm
+
+# NuGet
+*.nupkg
+*.snupkg
+**/[Pp]ackages/
+!**/[Pp]ackages/build/
+*.nuget.props
+*.nuget.targets
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# dotnet tool manifests
+.config/
+
+# Rider
+.idea/
+*.sln.iml
+
+# Roslyn/Compiler cache
+./.vs
+
+# Entity Framework migrations auto-generated
+# (keep migration files but ignore designer snapshots if needed)
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*.trx
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+
+# Publish output
+publish/
+**/publish/
+**/Properties/launchSettings.json
+
+# Secret / environment files
+appsettings.Development.json
+appsettings.Local.json
+*.env
+.env
+.env.*
+!.env.example
+
+# -----------------------------------------------------------------------------
+# Node.js / React / Vite (Frontend)
+# -----------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build output
+frontend/dist/
+frontend/dist-ssr/
+frontend/build/
+frontend/.next/
+frontend/out/
+
+# Vite cache
+frontend/.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# Storybook
+.storybook/build/
+
+# ESLint cache
+.eslintcache
+
+# Prettier cache
+.prettiercache
+
+# Local env files
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+
+# -----------------------------------------------------------------------------
+# Docker
+# -----------------------------------------------------------------------------
+# Local volume data (postgres data, redis data, etc.)
+docker/volumes/
+postgres-data/
+redis-data/
+
+# Override files (local-only compose overrides)
+docker-compose.override.yml
+docker-compose.local.yml
+
+# -----------------------------------------------------------------------------
+# Environment & Secrets
+# -----------------------------------------------------------------------------
+*.env
+.env
+.env.local
+.env.*.local
+secrets/
+*.pem
+*.key
+*.pfx
+*.p12
+*.cer
+
+# -----------------------------------------------------------------------------
+# Operating System
+# -----------------------------------------------------------------------------
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+
+# -----------------------------------------------------------------------------
+# IDE / Editors
+# -----------------------------------------------------------------------------
+
+# Visual Studio Code
+.vscode/
+!.vscode/extensions.json
+!.vscode/settings.json.example
+
+# JetBrains (Rider, WebStorm, etc.)
+.idea/
+*.iml
+*.iws
+
+# Vim
+*.swp
+*.swo
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+tags
+
+# Emacs
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# -----------------------------------------------------------------------------
+# Logs & Temporary files
+# -----------------------------------------------------------------------------
+*.log
+*.tmp
+*.temp
+*.bak
+*.orig
+*.rej
+tmp/
+temp/
+
+# -----------------------------------------------------------------------------
+# CI/CD & Deployment
+# -----------------------------------------------------------------------------
+.github/secrets/
+deployment/secrets/
+
+# -----------------------------------------------------------------------------
+# Database
+# -----------------------------------------------------------------------------
+*.sqlite
+*.sqlite3
+*.db
+*.db-shm
+*.db-wal
+*.mdf
+*.ldf
