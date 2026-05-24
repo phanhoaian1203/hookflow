@@ -47,8 +47,8 @@ export interface WebhookEvent {
   nextRetryAt: string | null
   errorMessage: string | null
   sourceIp: string | null
-  payloadJson: Record<string, unknown> | null
-  headersJson: Record<string, string> | null
+  payloadJson: string | Record<string, unknown> | null
+  headersJson: string | Record<string, string> | null
   receivedAt: string
   processedAt: string | null
   durationMs: number | null
