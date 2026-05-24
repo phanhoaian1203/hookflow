@@ -16,6 +16,7 @@ public static class DependencyInjection
         // Register application services
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IProjectService, ProjectService>();
+        services.AddScoped<IWebhookEndpointService, WebhookEndpointService>();
 
         return services;
     }

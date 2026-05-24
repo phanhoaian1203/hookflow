@@ -12,6 +12,8 @@ import { ProjectDetailPage } from '@/pages/ProjectDetailPage'
 import { EventLogsPage }  from '@/pages/EventLogsPage'
 import { EventDetailPage }from '@/pages/EventDetailPage'
 import { SimulatorPage }  from '@/pages/SimulatorPage'
+import { EndpointsPage } from '@/pages/EndpointsPage'
+import { EndpointDetailPage } from '@/pages/EndpointDetailPage'
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -38,7 +40,8 @@ export function AppRouter() {
         <Route path="/dashboard"   element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
         <Route path="/projects"    element={<ProtectedRoute><AppLayout><ProjectsPage /></AppLayout></ProtectedRoute>} />
         <Route path="/projects/:id" element={<ProtectedRoute><AppLayout><ProjectDetailPage /></AppLayout></ProtectedRoute>} />
-        <Route path="/endpoints"   element={<ProtectedRoute><AppLayout><PlaceholderPage title="Endpoints" /></AppLayout></ProtectedRoute>} />
+        <Route path="/endpoints"   element={<ProtectedRoute><AppLayout><EndpointsPage /></AppLayout></ProtectedRoute>} />
+        <Route path="/endpoints/:id" element={<ProtectedRoute><AppLayout><EndpointDetailPage /></AppLayout></ProtectedRoute>} />
         <Route path="/events"      element={<ProtectedRoute><AppLayout><EventLogsPage /></AppLayout></ProtectedRoute>} />
         <Route path="/events/:id"  element={<ProtectedRoute><AppLayout><EventDetailPage /></AppLayout></ProtectedRoute>} />
         <Route path="/retry-queue" element={<ProtectedRoute><AppLayout><PlaceholderPage title="Retry Queue" /></AppLayout></ProtectedRoute>} />
