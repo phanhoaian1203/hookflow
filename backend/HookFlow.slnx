@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="HookFlow.Api/HookFlow.Api.csproj" />
+  <Project Path="HookFlow.Application/HookFlow.Application.csproj" />
+  <Project Path="HookFlow.Domain/HookFlow.Domain.csproj" />
+  <Project Path="HookFlow.Infrastructure/HookFlow.Infrastructure.csproj" />
+  <Project Path="HookFlow.Tests/HookFlow.Tests.csproj" />
+</Solution>
