@@ -1,7 +1,31 @@
-import { Link } from 'react-router-dom'
-import { Zap, Mail, Lock, ArrowRight } from 'lucide-react'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '@/context/AuthContext'
+import { Zap, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react'
 
 export function LoginPage() {
+  const { login } = useAuth()
+  const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setIsSubmitting(true)
+
+    try {
+      await login(email, password)
+      navigate('/dashboard')
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your credentials.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-hero bg-grid flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -20,7 +44,13 @@ export function LoginPage() {
             <p className="text-hf-text-sec text-sm">Sign in to your HookFlow account</p>
           </div>
 
-          <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); window.location.href = '/dashboard' }}>
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl p-3 mb-4 animate-fade-in">
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
             {/* Email */}
             <div>
               <label className="block text-xs font-medium text-hf-text-sec mb-1.5">Email address</label>
@@ -28,9 +58,11 @@ export function LoginPage() {
                 <Mail size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-hf-muted" />
                 <input
                   type="email"
-                  defaultValue="dev@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   className="input-base pl-9"
+                  required
                 />
               </div>
             </div>
@@ -47,32 +79,34 @@ export function LoginPage() {
                 <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-hf-muted" />
                 <input
                   type="password"
-                  defaultValue="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="input-base pl-9"
+                  required
                 />
               </div>
             </div>
 
-            {/* Remember me */}
-            <div className="flex items-center gap-2">
-              <input type="checkbox" id="remember" className="w-4 h-4 rounded border-hf-border bg-hf-bg accent-hf-accent" defaultChecked />
-              <label htmlFor="remember" className="text-sm text-hf-text-sec">Remember me</label>
-            </div>
-
             {/* Submit */}
-            <button type="submit" className="btn-primary w-full py-2.5 text-sm mt-2">
-              Sign in <ArrowRight size={15} />
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-primary w-full py-2.5 text-sm mt-4 flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Signing in...
+                </>
+              ) : (
+                <>
+                  Sign in <ArrowRight size={15} />
+                </>
+              )}
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-hf-border" /></div>
-            <div className="relative text-center"><span className="px-3 text-xs text-hf-muted bg-hf-card">Demo account pre-filled</span></div>
-          </div>
-
-          <p className="text-center text-sm text-hf-text-sec">
+          <p className="text-center text-sm text-hf-text-sec mt-6">
             Don't have an account?{' '}
             <Link to="/register" className="text-hf-accent hover:text-hf-accent-lt transition-colors font-medium">
               Create one free

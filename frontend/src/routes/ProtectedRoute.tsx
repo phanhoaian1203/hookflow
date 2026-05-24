@@ -1,19 +1,25 @@
 import { Navigate } from 'react-router-dom'
 import { type ReactNode } from 'react'
-
-// v0.2: Mock auth check — always logged in for demo
-// v0.4: Replace with real JWT token validation
-const isMockLoggedIn = () => {
-  return localStorage.getItem('hf_mock_auth') !== 'false'
-}
+import { useAuth } from '@/context/AuthContext'
 
 interface ProtectedRouteProps {
   children: ReactNode
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  if (!isMockLoggedIn()) {
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-violet-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
+
   return <>{children}</>
 }

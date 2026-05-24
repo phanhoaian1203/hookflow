@@ -2,6 +2,9 @@ using Serilog;
 using Scalar.AspNetCore;
 using HookFlow.Infrastructure;
 using HookFlow.Application;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -18,6 +21,18 @@ try
         .Enrich.FromLogContext()
         .WriteTo.Console());
 
+    // --- Configure CORS ---
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("CorsPolicy", policy =>
+        {
+            policy.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+    });
+
     // --- Configure Services ---
     builder.Services.AddControllers();
 
@@ -25,9 +40,33 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddApplication();
 
-    // Configure OpenAPI & Swashbuckle Swagger
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+    // --- Configure JWT Authentication ---
+    var secretKey = builder.Configuration["Jwt:Secret"] ?? "your_super_secret_jwt_key_that_is_at_least_256_bits_long_hookflow";
+    var key = Encoding.UTF8.GetBytes(secretKey);
+
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false; // Dev environment only
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ValidateIssuer = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "HookFlow",
+            ValidateAudience = true,
+            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "HookFlowUsers",
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+    // Configure OpenAPI (.NET 9/10 native)
     builder.Services.AddOpenApi();
 
     var app = builder.Build();
@@ -47,8 +86,7 @@ try
                    .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
         });
 
-        // Map Swashbuckle Swagger UI
-        app.UseSwagger();
+        // Map Swashbuckle Swagger UI (points to the native .NET OpenAPI JSON!)
         app.UseSwaggerUI(options =>
         {
             options.SwaggerEndpoint("/openapi/v1.json", "HookFlow API v1");
@@ -56,8 +94,11 @@ try
         });
     }
 
+    app.UseCors("CorsPolicy");
+
     app.UseHttpsRedirection();
     
+    app.UseAuthentication();
     app.UseAuthorization();
 
     app.MapControllers();

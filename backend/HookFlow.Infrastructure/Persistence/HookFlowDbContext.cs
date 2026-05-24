@@ -1,9 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using HookFlow.Domain.Entities;
+using HookFlow.Application.Interfaces;
 
 namespace HookFlow.Infrastructure.Persistence;
 
-public class HookFlowDbContext : DbContext
+public class HookFlowDbContext : DbContext, IApplicationDbContext
 {
     public HookFlowDbContext(DbContextOptions<HookFlowDbContext> options) : base(options)
     {

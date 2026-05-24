@@ -1,7 +1,8 @@
 import { NavLink, useLocation } from 'react-router-dom'
+import { useAuth } from '@/context/AuthContext'
 import {
   LayoutDashboard, FolderKanban, Webhook, FileText,
-  RefreshCw, FlaskConical, Settings, Zap, ChevronRight,
+  RefreshCw, FlaskConical, Settings, Zap, ChevronRight, LogOut
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -16,6 +17,7 @@ const navItems = [
 
 export function Sidebar() {
   const location = useLocation()
+  const { user, logout } = useAuth()
 
   return (
     <aside className="w-60 flex-shrink-0 h-screen flex flex-col border-r border-hf-border bg-hf-bg-sec">
@@ -45,8 +47,8 @@ export function Sidebar() {
                 <Icon
                   size={16}
                   className={cn(
-                    'flex-shrink-0 transition-colors',
-                    isActive ? 'text-hf-accent' : 'text-hf-muted group-hover:text-hf-text-sec'
+                     'flex-shrink-0 transition-colors',
+                     isActive ? 'text-hf-accent' : 'text-hf-muted group-hover:text-hf-text-sec'
                   )}
                 />
                 <span className="flex-1">{label}</span>
@@ -68,15 +70,22 @@ export function Sidebar() {
           </div>
         </NavLink>
 
-        {/* User avatar */}
+        {/* User avatar & Logout */}
         <div className="mt-3 flex items-center gap-3 px-3 py-2.5 rounded-lg bg-hf-hover border border-hf-border">
           <div className="w-7 h-7 rounded-full bg-gradient-to-br from-hf-accent to-purple-400 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-            N
+            {user?.fullName?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-medium text-hf-text truncate">Ngoc Anh</div>
-            <div className="text-[10px] text-hf-muted truncate">dev@example.com</div>
+            <div className="text-xs font-medium text-hf-text truncate">{user?.fullName || 'User'}</div>
+            <div className="text-[10px] text-hf-muted truncate">{user?.email || 'user@example.com'}</div>
           </div>
+          <button 
+            onClick={logout} 
+            title="Log Out"
+            className="text-hf-muted hover:text-red-400 transition-colors p-1 rounded hover:bg-hf-card flex items-center justify-center flex-shrink-0"
+          >
+            <LogOut size={14} />
+          </button>
         </div>
       </div>
     </aside>

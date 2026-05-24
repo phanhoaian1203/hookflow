@@ -1,7 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using HookFlow.Application.Interfaces;
+using HookFlow.Application.Interfaces.Security;
 using HookFlow.Infrastructure.Persistence;
+using HookFlow.Infrastructure.Security;
 
 namespace HookFlow.Infrastructure;
 
@@ -14,6 +17,13 @@ public static class DependencyInjection
         services.AddDbContext<HookFlowDbContext>(options =>
             options.UseNpgsql(connectionString, b => 
                 b.MigrationsAssembly(typeof(HookFlowDbContext).Assembly.FullName)));
+
+        // Register database context abstraction
+        services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<HookFlowDbContext>());
+
+        // Register security services
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
         return services;
     }
