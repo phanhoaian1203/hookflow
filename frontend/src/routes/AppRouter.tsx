@@ -8,6 +8,7 @@ import { LoginPage }      from '@/pages/LoginPage'
 import { RegisterPage }   from '@/pages/RegisterPage'
 import { DashboardPage }  from '@/pages/DashboardPage'
 import { ProjectsPage }   from '@/pages/ProjectsPage'
+import { ProjectDetailPage } from '@/pages/ProjectDetailPage'
 import { EventLogsPage }  from '@/pages/EventLogsPage'
 import { EventDetailPage }from '@/pages/EventDetailPage'
 import { SimulatorPage }  from '@/pages/SimulatorPage'
@@ -36,6 +37,7 @@ export function AppRouter() {
         {/* Protected routes (with AppLayout) */}
         <Route path="/dashboard"   element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
         <Route path="/projects"    element={<ProtectedRoute><AppLayout><ProjectsPage /></AppLayout></ProtectedRoute>} />
+        <Route path="/projects/:id" element={<ProtectedRoute><AppLayout><ProjectDetailPage /></AppLayout></ProtectedRoute>} />
         <Route path="/endpoints"   element={<ProtectedRoute><AppLayout><PlaceholderPage title="Endpoints" /></AppLayout></ProtectedRoute>} />
         <Route path="/events"      element={<ProtectedRoute><AppLayout><EventLogsPage /></AppLayout></ProtectedRoute>} />
         <Route path="/events/:id"  element={<ProtectedRoute><AppLayout><EventDetailPage /></AppLayout></ProtectedRoute>} />

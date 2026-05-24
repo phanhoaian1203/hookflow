@@ -15,6 +15,7 @@ public static class DependencyInjection
 
         // Register application services
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IProjectService, ProjectService>();
 
         return services;
     }
