@@ -25,40 +25,50 @@ public class WebhookWorker : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
+            bool processedAny = false;
             try
             {
-                await ProcessPendingEventsAsync(stoppingToken);
+                processedAny = await ProcessPendingEventsAsync(stoppingToken);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while processing webhook events.");
             }
 
-            // Polling interval of 5 seconds
+            if (processedAny)
+            {
+                // Immediately check for more events without delay
+                continue;
+            }
+
+            // Polling interval of 5 seconds when idle
             await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
         }
     }
 
-    private async Task ProcessPendingEventsAsync(CancellationToken stoppingToken)
+    private async Task<bool> ProcessPendingEventsAsync(CancellationToken stoppingToken)
     {
         using var scope = _scopeFactory.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<IApplicationDbContext>();
 
-        // Fetch the oldest Pending event
+        var now = DateTime.UtcNow;
+        // Fetch the oldest Pending or ready-to-Retry event
         var webhookEvent = await context.WebhookEvents
             .Include(e => e.Endpoint)
-            .Where(e => e.Status == WebhookEventStatus.Pending)
-            .OrderBy(e => e.ReceivedAt)
+            .Where(e => e.Status == WebhookEventStatus.Pending || 
+                        (e.Status == WebhookEventStatus.Retrying && e.NextRetryAt <= now))
+            .OrderBy(e => e.NextRetryAt ?? e.ReceivedAt)
             .FirstOrDefaultAsync(stoppingToken);
 
         if (webhookEvent == null)
         {
-            return;
+            return false;
         }
 
         _logger.LogInformation("Processing event {EventId} for endpoint {EndpointName}", webhookEvent.Id, webhookEvent.Endpoint?.Name);
 
         // 1. Set Status = Processing
+        var previousStatus = webhookEvent.Status;
         webhookEvent.Status = WebhookEventStatus.Processing;
         await context.SaveChangesAsync(stoppingToken);
 
@@ -121,14 +131,50 @@ public class WebhookWorker : BackgroundService
             attempt.ErrorMessage = errorMessage;
 
             // 6. Update WebhookEvent Status
-            webhookEvent.Status = isSuccess ? WebhookEventStatus.Processed : WebhookEventStatus.Failed;
-            webhookEvent.ProcessedAt = DateTime.UtcNow;
-            webhookEvent.ErrorMessage = errorMessage;
+            if (isSuccess)
+            {
+                webhookEvent.Status = WebhookEventStatus.Processed;
+                webhookEvent.ProcessedAt = DateTime.UtcNow;
+                webhookEvent.ErrorMessage = null;
+            }
+            else
+            {
+                if (previousStatus == WebhookEventStatus.Retrying)
+                {
+                    webhookEvent.RetryCount++;
+                }
+                webhookEvent.ErrorMessage = errorMessage;
+
+                if (webhookEvent.RetryCount < webhookEvent.MaxRetryAttempts)
+                {
+                    webhookEvent.Status = WebhookEventStatus.Retrying;
+                    webhookEvent.NextRetryAt = CalculateNextRetryAt(webhookEvent.RetryCount + 1);
+                }
+                else
+                {
+                    webhookEvent.Status = WebhookEventStatus.Dead;
+                    webhookEvent.NextRetryAt = null;
+                }
+            }
 
             await context.SaveChangesAsync(stoppingToken);
 
             _logger.LogInformation("Finished processing event {EventId}. Status: {Status}, Duration: {DurationMs}ms", 
                 webhookEvent.Id, webhookEvent.Status, durationMs);
         }
+        return true;
+    }
+
+    private static DateTime CalculateNextRetryAt(int retryCount)
+    {
+        var delay = retryCount switch
+        {
+            1 => TimeSpan.FromMinutes(1),
+            2 => TimeSpan.FromMinutes(5),
+            3 => TimeSpan.FromMinutes(15),
+            4 => TimeSpan.FromHours(1),
+            _ => TimeSpan.FromHours(1) // Fallback for any unexpected count
+        };
+        return DateTime.UtcNow.Add(delay);
     }
 }

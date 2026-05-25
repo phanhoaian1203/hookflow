@@ -45,8 +45,10 @@ export interface WebhookEvent {
   status: WebhookEventStatus
   signatureValid: boolean | null
   retryCount: number
+  maxRetryAttempts?: number | null
   nextRetryAt: string | null
   errorMessage: string | null
+  lastErrorMessage?: string | null
   sourceIp: string | null
   payloadJson: string | Record<string, unknown> | null
   headersJson: string | Record<string, string> | null

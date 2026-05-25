@@ -14,6 +14,7 @@ public class WebhookEvent : BaseEntity
     public bool? SignatureValid { get; set; }
     public WebhookEventStatus Status { get; set; } = WebhookEventStatus.Pending;
     public int RetryCount { get; set; } = 0;
+    public int MaxRetryAttempts { get; set; } = 5;
     public DateTime? NextRetryAt { get; set; }
     public string? ErrorMessage { get; set; }
     public DateTime ReceivedAt { get; set; } = DateTime.UtcNow;

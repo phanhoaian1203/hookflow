@@ -99,4 +99,106 @@ public class WebhookEventsController : ControllerBase
             });
         }
     }
+
+    [HttpPost("{id:guid}/replay")]
+    public async Task<IActionResult> ReplayEvent(Guid id)
+    {
+        try
+        {
+            var userId = GetUserId();
+            await _eventService.ReplayEventAsync(id, userId);
+            
+            return Ok(new
+            {
+                success = true,
+                data = (object?)null,
+                message = "Event has been queued for replay successfully"
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { success = false, message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new
+            {
+                success = false,
+                data = (object?)null,
+                message = ex.Message,
+                errors = new[] { ex.Message }
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                data = (object?)null,
+                message = ex.Message,
+                errors = new[] { ex.Message }
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                data = (object?)null,
+                message = "An error occurred while replaying webhook event",
+                errors = new[] { ex.Message }
+            });
+        }
+    }
+
+    [HttpPost("{id:guid}/ignore")]
+    public async Task<IActionResult> IgnoreEvent(Guid id)
+    {
+        try
+        {
+            var userId = GetUserId();
+            await _eventService.IgnoreEventAsync(id, userId);
+            
+            return Ok(new
+            {
+                success = true,
+                data = (object?)null,
+                message = "Event has been ignored successfully"
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { success = false, message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new
+            {
+                success = false,
+                data = (object?)null,
+                message = ex.Message,
+                errors = new[] { ex.Message }
+            });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new
+            {
+                success = false,
+                data = (object?)null,
+                message = ex.Message,
+                errors = new[] { ex.Message }
+            });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new
+            {
+                success = false,
+                data = (object?)null,
+                message = "An error occurred while ignoring webhook event",
+                errors = new[] { ex.Message }
+            });
+        }
+    }
 }

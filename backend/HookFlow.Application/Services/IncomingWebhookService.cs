@@ -82,6 +82,7 @@ public class IncomingWebhookService : IIncomingWebhookService
             SignatureValid = signatureValid,
             Status = eventStatus,
             RetryCount = 0,
+            MaxRetryAttempts = endpoint.MaxRetryAttempts,
             ReceivedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
         };

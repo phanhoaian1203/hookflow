@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { 
   ArrowLeft, Clock, Server, Globe, CheckCircle, 
   XCircle, Loader2, FileJson, Layers, Clipboard, Check,
-  AlertCircle, ShieldAlert
+  AlertCircle, ShieldAlert, RefreshCw, X
 } from 'lucide-react'
 import { StatusBadge } from '@/components/common/StatusBadge'
 import { formatDate, formatRelativeTime, formatMs } from '@/lib/utils'
@@ -18,8 +18,17 @@ export function EventDetailPage() {
   const [activeTab, setActiveTab] = useState<Tab>('payload')
   const [copied, setCopied] = useState(false)
 
+  // ─── Custom Premium Toast State ───
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type })
+    const timer = setTimeout(() => setToast(null), 4000)
+    return () => clearTimeout(timer)
+  }
+
   // 1. Fetch webhook event details from real API
-  const { data: event, isLoading, error } = useQuery<WebhookEvent>({
+  const { data: event, isLoading, error, refetch } = useQuery<WebhookEvent>({
     queryKey: ['event', id],
     queryFn: async () => {
       const response = await api.get(`/webhook-events/${id}`)
@@ -29,6 +38,34 @@ export function EventDetailPage() {
       throw new Error(response.data.message || 'Failed to load event details')
     },
     enabled: !!id,
+  })
+
+  const { mutate: replayEvent, isPending: isReplaying } = useMutation({
+    mutationFn: async () => {
+      const response = await api.post(`/webhook-events/${id}/replay`)
+      return response.data
+    },
+    onSuccess: () => {
+      showToast('Event has been queued for replay successfully.')
+      refetch()
+    },
+    onError: (err: any) => {
+      showToast(err.response?.data?.message || err.message || 'Failed to replay event', 'error')
+    }
+  })
+
+  const { mutate: ignoreEvent, isPending: isIgnoring } = useMutation({
+    mutationFn: async () => {
+      const response = await api.post(`/webhook-events/${id}/ignore`)
+      return response.data
+    },
+    onSuccess: () => {
+      showToast('Event has been ignored successfully.')
+      refetch()
+    },
+    onError: (err: any) => {
+      showToast(err.response?.data?.message || err.message || 'Failed to ignore event', 'error')
+    }
   })
 
   const copyToClipboard = (text: string) => {
@@ -154,6 +191,28 @@ export function EventDetailPage() {
             <span>{event.projectName}</span>
           </p>
         </div>
+        
+        {/* Actions */}
+        <div className="flex gap-3">
+          {(event.status === 'Retrying' || event.status === 'Dead' || event.status === 'Failed') && (
+            <button
+              onClick={() => ignoreEvent()}
+              disabled={isIgnoring}
+              className="btn-secondary py-2 px-4 text-sm flex items-center gap-2 border-hf-border/60 hover:bg-hf-hover/60 disabled:opacity-50 disabled:cursor-not-allowed text-hf-text-sec hover:text-hf-text"
+            >
+              <XCircle size={16} />
+              {isIgnoring ? 'Ignoring...' : 'Ignore Event'}
+            </button>
+          )}
+          <button
+            onClick={() => replayEvent()}
+            disabled={isReplaying || event.status === 'Processing' || event.status === 'Pending'}
+            className="btn-primary py-2 px-4 text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <RefreshCw size={16} className={isReplaying ? "animate-spin" : ""} />
+            {isReplaying ? 'Replaying...' : 'Replay Event'}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
@@ -181,7 +240,7 @@ export function EventDetailPage() {
                       ? <span className="text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded text-[10px] uppercase tracking-wide flex items-center gap-1 w-fit"><CheckCircle size={11} /> Valid</span>
                       : <span className="text-red-400 font-bold bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 rounded text-[10px] uppercase tracking-wide flex items-center gap-1 w-fit"><XCircle size={11} /> Invalid</span>
                 },
-                { label: 'Retry Attempt Count', value: <span className={event.retryCount > 0 ? 'text-amber-400 font-bold' : 'text-hf-muted'}>{event.retryCount}</span> },
+                { label: 'Retry Attempt Count', value: <span className={event.retryCount > 0 ? 'text-amber-400 font-bold' : 'text-hf-muted'}>{event.retryCount} / {event.maxRetryAttempts ?? 5}</span> },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between items-start py-0.5">
                   <span className="text-hf-muted font-semibold text-[11px] uppercase tracking-wider">{label}</span>
@@ -393,10 +452,23 @@ export function EventDetailPage() {
                 )}
               </div>
             )}
-
           </div>
         </div>
       </div>
+
+      {/* Premium Custom Toast Notification */}
+      {toast && (
+        <div className={`fixed bottom-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-glow-lg animate-slide-in ${
+          toast.type === 'success' 
+            ? 'bg-emerald-950/90 border-emerald-500/30 text-emerald-400 backdrop-blur-md' 
+            : 'bg-red-950/90 border-red-500/30 text-red-400 backdrop-blur-md'
+        }`}>
+          <span className="text-xs font-semibold">{toast.message}</span>
+          <button onClick={() => setToast(null)} className="text-hf-muted hover:text-hf-text transition-colors">
+            <X size={14} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }

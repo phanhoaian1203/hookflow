@@ -14,8 +14,10 @@ public class WebhookEventDto
     public bool? SignatureValid { get; set; }
     public string Status { get; set; } = string.Empty;
     public int RetryCount { get; set; }
+    public int MaxRetryAttempts { get; set; }
     public DateTime? NextRetryAt { get; set; }
     public string? ErrorMessage { get; set; }
+    public string? LastErrorMessage { get; set; }
     public DateTime ReceivedAt { get; set; }
     public DateTime? ProcessedAt { get; set; }
     public DateTime CreatedAt { get; set; }

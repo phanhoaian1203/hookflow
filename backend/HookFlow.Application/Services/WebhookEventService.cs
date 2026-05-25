@@ -28,9 +28,15 @@ public class WebhookEventService : IWebhookEventService
         // 2. Apply Filters
         if (!string.IsNullOrWhiteSpace(request.Status))
         {
-            if (Enum.TryParse<WebhookEventStatus>(request.Status, true, out var statusEnum))
+            var statuses = request.Status.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => Enum.TryParse<WebhookEventStatus>(s.Trim(), true, out var parsed) ? parsed : (WebhookEventStatus?)null)
+                .Where(s => s.HasValue)
+                .Select(s => s!.Value)
+                .ToList();
+
+            if (statuses.Any())
             {
-                query = query.Where(e => e.Status == statusEnum);
+                query = query.Where(e => statuses.Contains(e.Status));
             }
         }
 
@@ -109,6 +115,59 @@ public class WebhookEventService : IWebhookEventService
         return MapToDto(webhookEvent, webhookEvent.Endpoint.Name, webhookEvent.Endpoint.Project.Name);
     }
 
+    public async Task<bool> ReplayEventAsync(Guid eventId, Guid userId)
+    {
+        var webhookEvent = await _context.WebhookEvents
+            .Include(e => e.Endpoint)
+            .ThenInclude(ep => ep.Project)
+            .FirstOrDefaultAsync(e => e.Id == eventId);
+
+        if (webhookEvent == null || webhookEvent.Endpoint.Project.OwnerId != userId)
+        {
+            throw new KeyNotFoundException("Webhook event not found or you do not have permission to access it.");
+        }
+
+        // Only allow replaying certain statuses
+        if (webhookEvent.Status == WebhookEventStatus.Processing)
+        {
+            throw new InvalidOperationException("Event is currently processing and cannot be replayed.");
+        }
+
+        webhookEvent.Status = WebhookEventStatus.Pending;
+        webhookEvent.RetryCount = 0;
+        webhookEvent.NextRetryAt = null;
+        
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> IgnoreEventAsync(Guid eventId, Guid userId)
+    {
+        var webhookEvent = await _context.WebhookEvents
+            .Include(e => e.Endpoint)
+            .ThenInclude(ep => ep.Project)
+            .FirstOrDefaultAsync(e => e.Id == eventId);
+
+        if (webhookEvent == null || webhookEvent.Endpoint.Project.OwnerId != userId)
+        {
+            throw new KeyNotFoundException("Webhook event not found or you do not have permission to access it.");
+        }
+
+        // Only allow ignoring if it is Retrying or Dead or Failed
+        if (webhookEvent.Status != WebhookEventStatus.Retrying && 
+            webhookEvent.Status != WebhookEventStatus.Dead && 
+            webhookEvent.Status != WebhookEventStatus.Failed)
+        {
+            throw new InvalidOperationException("Only retrying, dead, or failed events can be ignored.");
+        }
+
+        webhookEvent.Status = WebhookEventStatus.Ignored;
+        webhookEvent.NextRetryAt = null;
+        
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     #region Helper Methods
 
     private static WebhookEventDto MapToDto(WebhookEvent ev, string endpointName, string projectName)
@@ -127,8 +186,10 @@ public class WebhookEventService : IWebhookEventService
             SignatureValid = ev.SignatureValid,
             Status = ev.Status.ToString(),
             RetryCount = ev.RetryCount,
+            MaxRetryAttempts = ev.MaxRetryAttempts,
             NextRetryAt = ev.NextRetryAt,
             ErrorMessage = ev.ErrorMessage,
+            LastErrorMessage = ev.ErrorMessage,
             ReceivedAt = ev.ReceivedAt,
             ProcessedAt = ev.ProcessedAt,
             CreatedAt = ev.CreatedAt,

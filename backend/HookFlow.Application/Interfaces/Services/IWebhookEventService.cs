@@ -7,4 +7,6 @@ public interface IWebhookEventService
 {
     Task<PagedResult<WebhookEventDto>> GetEventsAsync(GetEventsRequest request, Guid userId);
     Task<WebhookEventDto> GetEventByIdAsync(Guid eventId, Guid userId);
+    Task<bool> ReplayEventAsync(Guid eventId, Guid userId);
+    Task<bool> IgnoreEventAsync(Guid eventId, Guid userId);
 }

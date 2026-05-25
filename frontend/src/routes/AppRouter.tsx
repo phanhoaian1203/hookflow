@@ -14,6 +14,7 @@ import { EventDetailPage }from '@/pages/EventDetailPage'
 import { SimulatorPage }  from '@/pages/SimulatorPage'
 import { EndpointsPage } from '@/pages/EndpointsPage'
 import { EndpointDetailPage } from '@/pages/EndpointDetailPage'
+import { RetryQueuePage } from '@/pages/RetryQueuePage'
 
 function PlaceholderPage({ title }: { title: string }) {
   return (
@@ -44,7 +45,7 @@ export function AppRouter() {
         <Route path="/endpoints/:id" element={<ProtectedRoute><AppLayout><EndpointDetailPage /></AppLayout></ProtectedRoute>} />
         <Route path="/events"      element={<ProtectedRoute><AppLayout><EventLogsPage /></AppLayout></ProtectedRoute>} />
         <Route path="/events/:id"  element={<ProtectedRoute><AppLayout><EventDetailPage /></AppLayout></ProtectedRoute>} />
-        <Route path="/retry-queue" element={<ProtectedRoute><AppLayout><PlaceholderPage title="Retry Queue" /></AppLayout></ProtectedRoute>} />
+        <Route path="/retry-queue" element={<ProtectedRoute><AppLayout><RetryQueuePage /></AppLayout></ProtectedRoute>} />
         <Route path="/simulator"   element={<ProtectedRoute><AppLayout><SimulatorPage /></AppLayout></ProtectedRoute>} />
         <Route path="/settings"    element={<ProtectedRoute><AppLayout><PlaceholderPage title="Settings" /></AppLayout></ProtectedRoute>} />
 
