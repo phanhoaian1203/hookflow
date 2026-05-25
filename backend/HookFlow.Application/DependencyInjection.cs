@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<IWebhookEndpointService, WebhookEndpointService>();
         services.AddScoped<IIncomingWebhookService, IncomingWebhookService>();
         services.AddScoped<IWebhookEventService, WebhookEventService>();
+        services.AddScoped<IDashboardService, DashboardService>();
 
         return services;
     }
