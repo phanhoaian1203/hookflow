@@ -12,6 +12,7 @@ public class WebhookEndpointDto
     public string Provider { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public string[]? AllowedEventTypes { get; set; }
+    public bool VerifySignature { get; set; }
     public string SignatureHeaderName { get; set; } = "X-Webhook-Signature";
     public bool RejectInvalidSignature { get; set; }
     public int MaxRetryAttempts { get; set; }

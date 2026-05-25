@@ -9,6 +9,7 @@ export interface WebhookEndpoint {
   provider: string
   isActive: boolean
   allowedEventTypes: string[] | null
+  verifySignature: boolean
   signatureHeaderName: string
   rejectInvalidSignature: boolean
   maxRetryAttempts: number
@@ -23,6 +24,7 @@ export interface CreateEndpointRequest {
   description?: string
   provider: string
   allowedEventTypes?: string[]
+  verifySignature: boolean
   signatureHeaderName: string
   rejectInvalidSignature: boolean
   maxRetryAttempts: number
@@ -33,6 +35,7 @@ export interface UpdateEndpointRequest {
   name: string
   description?: string
   allowedEventTypes?: string[]
+  verifySignature: boolean
   signatureHeaderName: string
   rejectInvalidSignature: boolean
   maxRetryAttempts: number

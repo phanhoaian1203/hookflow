@@ -13,6 +13,7 @@ public class WebhookEndpoint : BaseEntity
     public string? SecretKey { get; set; }
     public bool IsActive { get; set; } = true;
     public string[]? AllowedEventTypes { get; set; }
+    public bool VerifySignature { get; set; } = false;
     public string SignatureHeaderName { get; set; } = "X-Webhook-Signature";
     public bool RejectInvalidSignature { get; set; } = false;
     public int MaxRetryAttempts { get; set; } = 5;

@@ -269,6 +269,39 @@ public class WebhookEndpointsController : ControllerBase
         }
     }
 
+    [HttpGet("{id:guid}/secret")]
+    public async Task<IActionResult> GetSecret(Guid id)
+    {
+        try
+        {
+            var userId = GetUserId();
+            var secret = await _endpointService.GetEndpointSecretAsync(id, userId);
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    secretKey = secret
+                },
+                message = "Webhook endpoint secret key retrieved successfully"
+            });
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            return Unauthorized(new { success = false, message = ex.Message });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new
+            {
+                success = false,
+                data = (object?)null,
+                message = ex.Message,
+                errors = new[] { ex.Message }
+            });
+        }
+    }
+
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {

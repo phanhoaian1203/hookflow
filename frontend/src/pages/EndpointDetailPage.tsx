@@ -36,6 +36,7 @@ export function EndpointDetailPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [allowedEventTypesStr, setAllowedEventTypesStr] = useState('')
+  const [verifySignature, setVerifySignature] = useState(false)
   const [signatureHeaderName, setSignatureHeaderName] = useState('')
   const [rejectInvalidSignature, setRejectInvalidSignature] = useState(false)
   const [maxRetryAttempts, setMaxRetryAttempts] = useState(5)
@@ -53,6 +54,7 @@ export function EndpointDetailPage() {
         setName(data.name)
         setDescription(data.description || '')
         setAllowedEventTypesStr(data.allowedEventTypes?.join(', ') || '*')
+        setVerifySignature(data.verifySignature)
         setSignatureHeaderName(data.signatureHeaderName)
         setRejectInvalidSignature(data.rejectInvalidSignature)
         setMaxRetryAttempts(data.maxRetryAttempts)
@@ -114,6 +116,7 @@ export function EndpointDetailPage() {
     setName(endpoint.name)
     setDescription(endpoint.description || '')
     setAllowedEventTypesStr(endpoint.allowedEventTypes?.join(', ') || '*')
+    setVerifySignature(endpoint.verifySignature)
     setSignatureHeaderName(endpoint.signatureHeaderName)
     setRejectInvalidSignature(endpoint.rejectInvalidSignature)
     setMaxRetryAttempts(endpoint.maxRetryAttempts)
@@ -135,6 +138,7 @@ export function EndpointDetailPage() {
       name,
       description,
       allowedEventTypes,
+      verifySignature,
       signatureHeaderName,
       rejectInvalidSignature,
       maxRetryAttempts,
@@ -298,23 +302,35 @@ export function EndpointDetailPage() {
                 <span className="text-[10px] text-hf-muted">Delays between retry attempts.</span>
               </div>
 
-              <div className="p-4 rounded-xl bg-hf-bg border border-hf-border flex flex-col justify-between min-h-24">
-                <span className="text-xs text-hf-muted uppercase font-semibold">Signature Verification Header</span>
-                <span className="text-xs font-mono font-semibold text-hf-text my-2 select-all bg-hf-card-sec px-2 py-1 rounded border border-hf-border w-fit">{endpoint.signatureHeaderName}</span>
-                <span className="text-[10px] text-hf-muted">Header where the webhook signature hash is sent.</span>
-              </div>
+              {!endpoint.verifySignature ? (
+                <div className="p-4 rounded-xl bg-hf-bg border border-hf-border flex flex-col justify-between min-h-24 col-span-2">
+                  <span className="text-xs text-hf-muted uppercase font-semibold">Signature Verification</span>
+                  <span className="text-xs font-semibold my-2 px-2.5 py-0.5 rounded border w-fit text-zinc-400 bg-zinc-500/10 border-zinc-500/20">
+                    Verification Disabled
+                  </span>
+                  <span className="text-[10px] text-hf-muted">Incoming requests are not authenticated. Anyone who knows your webhook URL can send events. Enable verification in settings to secure this endpoint.</span>
+                </div>
+              ) : (
+                <>
+                  <div className="p-4 rounded-xl bg-hf-bg border border-hf-border flex flex-col justify-between min-h-24">
+                    <span className="text-xs text-hf-muted uppercase font-semibold">Signature Verification Header</span>
+                    <span className="text-xs font-mono font-semibold text-hf-text my-2 select-all bg-hf-card-sec px-2 py-1 rounded border border-hf-border w-fit">{endpoint.signatureHeaderName}</span>
+                    <span className="text-[10px] text-hf-muted">Header where the webhook signature hash is sent.</span>
+                  </div>
 
-              <div className="p-4 rounded-xl bg-hf-bg border border-hf-border flex flex-col justify-between min-h-24">
-                <span className="text-xs text-hf-muted uppercase font-semibold">Signature Validation Enforcement</span>
-                <span className={`text-xs font-semibold my-2 px-2.5 py-0.5 rounded border w-fit ${
-                  endpoint.rejectInvalidSignature 
-                    ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' 
-                    : 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20'
-                }`}>
-                  {endpoint.rejectInvalidSignature ? 'Reject Invalid Signatures' : 'Log Signature Failures'}
-                </span>
-                <span className="text-[10px] text-hf-muted">Controls whether invalid payloads are dropped immediately.</span>
-              </div>
+                  <div className="p-4 rounded-xl bg-hf-bg border border-hf-border flex flex-col justify-between min-h-24">
+                    <span className="text-xs text-hf-muted uppercase font-semibold">Signature Validation Enforcement</span>
+                    <span className={`text-xs font-semibold my-2 px-2.5 py-0.5 rounded border w-fit ${
+                      endpoint.rejectInvalidSignature 
+                        ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' 
+                        : 'text-zinc-400 bg-zinc-500/10 border-zinc-500/20'
+                    }`}>
+                      {endpoint.rejectInvalidSignature ? 'Reject Invalid Signatures' : 'Log Signature Failures'}
+                    </span>
+                    <span className="text-[10px] text-hf-muted">Controls whether invalid payloads are dropped immediately.</span>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -436,32 +452,17 @@ export function EndpointDetailPage() {
             )}
 
             <form onSubmit={handleEditSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Name */}
-                <div>
-                  <label className="block text-xs font-semibold text-hf-text-sec mb-1.5 uppercase tracking-wider">Endpoint Name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g. Production Webhook"
-                    className="input-base"
-                    required
-                  />
-                </div>
-
-                {/* Signature Header */}
-                <div>
-                  <label className="block text-xs font-semibold text-hf-text-sec mb-1.5 uppercase tracking-wider">Signature Header Name</label>
-                  <input
-                    type="text"
-                    value={signatureHeaderName}
-                    onChange={(e) => setSignatureHeaderName(e.target.value)}
-                    placeholder="X-Webhook-Signature"
-                    className="input-base"
-                    required
-                  />
-                </div>
+              {/* Name */}
+              <div>
+                <label className="block text-xs font-semibold text-hf-text-sec mb-1.5 uppercase tracking-wider">Endpoint Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Production Webhook"
+                  className="input-base"
+                  required
+                />
               </div>
 
               {/* Description */}
@@ -526,18 +527,49 @@ export function EndpointDetailPage() {
                   </div>
                 </div>
 
-                <label className="flex items-center gap-2 cursor-pointer mt-1 select-none">
-                  <input
-                    type="checkbox"
-                    checked={rejectInvalidSignature}
-                    onChange={(e) => setRejectInvalidSignature(e.target.checked)}
-                    className="w-3.5 h-3.5 accent-hf-accent rounded border-hf-border bg-hf-bg focus:ring-0 focus:ring-offset-0"
-                  />
-                  <div>
-                    <span className="text-[11px] font-medium text-hf-text-sec">Reject invalid signatures</span>
-                    <span className="block text-[9px] text-hf-muted leading-tight">Drop requests if the signature header verification fails</span>
-                  </div>
-                </label>
+                <div className="border-t border-hf-border/50 pt-2 space-y-3">
+                  <label className="flex items-center gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={verifySignature}
+                      onChange={(e) => setVerifySignature(e.target.checked)}
+                      className="w-3.5 h-3.5 accent-hf-accent rounded border-hf-border bg-hf-bg focus:ring-0 focus:ring-offset-0"
+                    />
+                    <div>
+                      <span className="text-[11px] font-medium text-hf-text-sec">Enable Signature Verification</span>
+                      <span className="block text-[9px] text-hf-muted leading-tight">Secure webhook events using HMAC SHA256 signature</span>
+                    </div>
+                  </label>
+
+                  {verifySignature && (
+                    <div className="pl-5.5 space-y-3.5 animate-scale-in">
+                      <div>
+                        <label className="block text-[10px] font-semibold text-hf-text-sec mb-1 uppercase tracking-wider">Signature Header Name</label>
+                        <input
+                          type="text"
+                          value={signatureHeaderName}
+                          onChange={(e) => setSignatureHeaderName(e.target.value)}
+                          placeholder="X-Webhook-Signature"
+                          className="input-base py-1.5 text-xs"
+                          required={verifySignature}
+                        />
+                      </div>
+                      
+                      <label className="flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={rejectInvalidSignature}
+                          onChange={(e) => setRejectInvalidSignature(e.target.checked)}
+                          className="w-3.5 h-3.5 accent-hf-accent rounded border-hf-border bg-hf-bg focus:ring-0 focus:ring-offset-0"
+                        />
+                        <div>
+                          <span className="text-[11px] font-medium text-hf-text-sec">Reject invalid signatures</span>
+                          <span className="block text-[9px] text-hf-muted leading-tight">Drop requests with HTTP 403 if signature validation fails</span>
+                        </div>
+                      </label>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex justify-end gap-3 pt-2">

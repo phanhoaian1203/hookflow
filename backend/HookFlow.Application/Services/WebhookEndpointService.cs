@@ -101,6 +101,7 @@ public class WebhookEndpointService : IWebhookEndpointService
             SecretKey = plainSecret,
             IsActive = true,
             AllowedEventTypes = request.AllowedEventTypes,
+            VerifySignature = request.VerifySignature,
             SignatureHeaderName = request.SignatureHeaderName.Trim(),
             RejectInvalidSignature = request.RejectInvalidSignature,
             MaxRetryAttempts = request.MaxRetryAttempts,
@@ -131,6 +132,7 @@ public class WebhookEndpointService : IWebhookEndpointService
         endpoint.Name = request.Name.Trim();
         endpoint.Description = request.Description?.Trim();
         endpoint.AllowedEventTypes = request.AllowedEventTypes;
+        endpoint.VerifySignature = request.VerifySignature;
         endpoint.SignatureHeaderName = request.SignatureHeaderName.Trim();
         endpoint.RejectInvalidSignature = request.RejectInvalidSignature;
         endpoint.MaxRetryAttempts = request.MaxRetryAttempts;
@@ -160,6 +162,20 @@ public class WebhookEndpointService : IWebhookEndpointService
         await _context.SaveChangesAsync();
 
         return newSecret;
+    }
+
+    public async Task<string> GetEndpointSecretAsync(Guid endpointId, Guid userId)
+    {
+        var endpoint = await _context.WebhookEndpoints
+            .Include(e => e.Project)
+            .FirstOrDefaultAsync(e => e.Id == endpointId);
+
+        if (endpoint == null || endpoint.Project.OwnerId != userId)
+        {
+            throw new KeyNotFoundException("Webhook endpoint not found or you do not have permission to access it.");
+        }
+
+        return endpoint.SecretKey ?? string.Empty;
     }
 
     public async Task<WebhookEndpointDto> ToggleEndpointActiveAsync(Guid endpointId, Guid userId)
@@ -212,6 +228,7 @@ public class WebhookEndpointService : IWebhookEndpointService
             Provider = endpoint.Provider.ToString(),
             IsActive = endpoint.IsActive,
             AllowedEventTypes = endpoint.AllowedEventTypes,
+            VerifySignature = endpoint.VerifySignature,
             SignatureHeaderName = endpoint.SignatureHeaderName,
             RejectInvalidSignature = endpoint.RejectInvalidSignature,
             MaxRetryAttempts = endpoint.MaxRetryAttempts,

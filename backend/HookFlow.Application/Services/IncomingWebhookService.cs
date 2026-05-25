@@ -10,10 +10,12 @@ namespace HookFlow.Application.Services;
 public class IncomingWebhookService : IIncomingWebhookService
 {
     private readonly IApplicationDbContext _context;
+    private readonly IWebhookSignatureVerifier _signatureVerifier;
 
-    public IncomingWebhookService(IApplicationDbContext context)
+    public IncomingWebhookService(IApplicationDbContext context, IWebhookSignatureVerifier signatureVerifier)
     {
         _context = context;
+        _signatureVerifier = signatureVerifier;
     }
 
     public async Task<Guid> ProcessIncomingWebhookAsync(string slug, string rawBody, Dictionary<string, string> headers, string? sourceIp)
@@ -42,7 +44,33 @@ public class IncomingWebhookService : IIncomingWebhookService
         string eventType = ExtractEventType(headers, rawBody);
         string externalEventId = ExtractExternalEventId(headers, rawBody);
 
-        // 4. Create and save the webhook event
+        // 4. Perform Signature Verification if enabled
+        bool? signatureValid = null;
+        WebhookEventStatus eventStatus = WebhookEventStatus.Pending;
+
+        if (endpoint.VerifySignature)
+        {
+            var headerKey = endpoint.SignatureHeaderName ?? "X-Webhook-Signature";
+            // Header lookup (case-insensitive)
+            var signatureHeader = headers.FirstOrDefault(h => h.Key.Equals(headerKey, StringComparison.OrdinalIgnoreCase));
+            
+            if (string.IsNullOrEmpty(signatureHeader.Value))
+            {
+                signatureValid = false;
+                eventStatus = WebhookEventStatus.InvalidSignature;
+            }
+            else
+            {
+                bool isVerified = _signatureVerifier.VerifySignature(rawBody, endpoint.SecretKey ?? string.Empty, signatureHeader.Value);
+                signatureValid = isVerified;
+                if (!isVerified)
+                {
+                    eventStatus = WebhookEventStatus.InvalidSignature;
+                }
+            }
+        }
+
+        // 5. Create and save the webhook event
         var webhookEvent = new WebhookEvent
         {
             EndpointId = endpoint.Id,
@@ -51,7 +79,8 @@ public class IncomingWebhookService : IIncomingWebhookService
             PayloadJson = rawBody,
             HeadersJson = JsonSerializer.Serialize(headers),
             SourceIp = sourceIp,
-            Status = WebhookEventStatus.Pending,
+            SignatureValid = signatureValid,
+            Status = eventStatus,
             RetryCount = 0,
             ReceivedAt = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow
@@ -59,6 +88,12 @@ public class IncomingWebhookService : IIncomingWebhookService
 
         _context.WebhookEvents.Add(webhookEvent);
         await _context.SaveChangesAsync();
+
+        // 6. If signature is invalid and endpoint is configured to reject invalid signatures, throw to reject HTTP request
+        if (endpoint.VerifySignature && signatureValid == false && endpoint.RejectInvalidSignature)
+        {
+            throw new InvalidOperationException("Webhook signature verification failed. Request rejected.");
+        }
 
         return webhookEvent.Id;
     }

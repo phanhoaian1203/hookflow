@@ -10,6 +10,7 @@ public interface IWebhookEndpointService
     Task<(WebhookEndpointDto Endpoint, string PlainSecret)> CreateEndpointAsync(CreateEndpointRequest request, Guid userId);
     Task<WebhookEndpointDto> UpdateEndpointAsync(Guid endpointId, UpdateEndpointRequest request, Guid userId);
     Task<string> RotateSecretAsync(Guid endpointId, Guid userId);
+    Task<string> GetEndpointSecretAsync(Guid endpointId, Guid userId);
     Task<WebhookEndpointDto> ToggleEndpointActiveAsync(Guid endpointId, Guid userId);
     Task DeleteEndpointAsync(Guid endpointId, Guid userId);
 }

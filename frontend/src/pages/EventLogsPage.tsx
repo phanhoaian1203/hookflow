@@ -314,11 +314,20 @@ export function EventLogsPage() {
                   {/* Status & Signature badge */}
                   <div>
                     <StatusBadge status={event.status} />
-                    {event.signatureValid !== null && (
-                      <span className={`block text-[9px] font-medium mt-1 ${event.signatureValid ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {event.signatureValid ? '✓ verified' : '✗ bad signature'}
-                      </span>
-                    )}
+                    <span className={`block text-[9px] font-bold mt-1 uppercase tracking-wider ${
+                      event.signatureValid === true 
+                        ? 'text-emerald-400' 
+                        : event.signatureValid === false 
+                          ? 'text-red-400' 
+                          : 'text-hf-muted'
+                    }`}>
+                      {event.signatureValid === true 
+                        ? '✓ Valid' 
+                        : event.signatureValid === false 
+                          ? '✗ Invalid' 
+                          : 'Not Checked'
+                      }
+                    </span>
                   </div>
 
                   {/* Received */}

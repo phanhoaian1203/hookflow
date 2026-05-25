@@ -176,10 +176,10 @@ export function EventDetailPage() {
                 {
                   label: 'Signature check',
                   value: event.signatureValid === null
-                    ? <span className="text-hf-muted">Not evaluated</span>
+                    ? <span className="text-hf-muted font-semibold bg-hf-hover border border-hf-border px-2.5 py-0.5 rounded text-[10px] uppercase tracking-wide">Not Checked</span>
                     : event.signatureValid
-                      ? <span className="text-emerald-400 font-semibold flex items-center gap-1"><CheckCircle size={12} /> Valid signature</span>
-                      : <span className="text-red-400 font-semibold flex items-center gap-1"><XCircle size={12} /> Invalid signature</span>
+                      ? <span className="text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded text-[10px] uppercase tracking-wide flex items-center gap-1 w-fit"><CheckCircle size={11} /> Valid</span>
+                      : <span className="text-red-400 font-bold bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 rounded text-[10px] uppercase tracking-wide flex items-center gap-1 w-fit"><XCircle size={11} /> Invalid</span>
                 },
                 { label: 'Retry Attempt Count', value: <span className={event.retryCount > 0 ? 'text-amber-400 font-bold' : 'text-hf-muted'}>{event.retryCount}</span> },
               ].map(({ label, value }) => (

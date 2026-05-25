@@ -3,8 +3,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using HookFlow.Application.Interfaces;
 using HookFlow.Application.Interfaces.Security;
+using HookFlow.Application.Interfaces.Services;
 using HookFlow.Infrastructure.Persistence;
 using HookFlow.Infrastructure.Security;
+using HookFlow.Infrastructure.Services;
 
 namespace HookFlow.Infrastructure;
 
@@ -24,6 +26,7 @@ public static class DependencyInjection
         // Register security services
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddSingleton<IWebhookSignatureVerifier, HmacSha256SignatureVerifier>();
 
         return services;
     }

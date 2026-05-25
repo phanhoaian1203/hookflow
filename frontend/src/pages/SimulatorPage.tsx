@@ -130,6 +130,30 @@ function CopyBtn({ text, label = 'Copy' }: { text: string; label?: string }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
+async function computeHmacSha256(secret: string, message: string): Promise<string> {
+  if (!secret || !message) return '';
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const messageData = encoder.encode(message);
+  
+  const cryptoKey = await window.crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await window.crypto.subtle.sign(
+    'HMAC',
+    cryptoKey,
+    messageData
+  );
+  
+  const hashArray = Array.from(new Uint8Array(signature));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export function SimulatorPage() {
   // ── State ──────────────────────────────────────────────────────────────────
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
@@ -138,6 +162,10 @@ export function SimulatorPage() {
   const [payload, setPayload] = useState(DEFAULT_PAYLOAD)
   const [isSending, setIsSending] = useState(false)
   const [result, setResult] = useState<SendResult | null>(null)
+
+  const [secretKey, setSecretKey] = useState<string>('')
+  const [signatureMode, setSignatureMode] = useState<'NoSignature' | 'ValidSignature' | 'InvalidSignature'>('ValidSignature')
+  const [computedSignature, setComputedSignature] = useState<string>('')
 
   // ── Queries ────────────────────────────────────────────────────────────────
   const { data: projects = [], isLoading: projectsLoading } = useQuery<Project[]>({
@@ -172,6 +200,39 @@ export function SimulatorPage() {
   const jsonValid = isValidJson(payload)
   const canSend = !!selectedEndpoint && jsonValid && !isSending
 
+  // Fetch secret key when selectedEndpointId changes
+  useEffect(() => {
+    if (selectedEndpointId) {
+      api.get(`/webhook-endpoints/${selectedEndpointId}/secret`)
+        .then(res => {
+          if (res.data?.success && res.data.data) {
+            setSecretKey(res.data.data.secretKey)
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch endpoint secret", err)
+          setSecretKey('')
+        })
+    } else {
+      setSecretKey('')
+    }
+  }, [selectedEndpointId])
+
+  // Precompute valid signature when secretKey or payload changes
+  useEffect(() => {
+    if (secretKey && payload) {
+      const compactPayload = payload.replace(/\s+/g, ' ').trim()
+      computeHmacSha256(secretKey, compactPayload).then(sig => {
+        setComputedSignature(sig)
+      }).catch(err => {
+        console.error("Failed to precompute signature", err)
+        setComputedSignature('')
+      })
+    } else {
+      setComputedSignature('')
+    }
+  }, [secretKey, payload])
+
   // Auto-select first project when data loads
   useEffect(() => {
     if (projects.length > 0 && !selectedProjectId) {
@@ -197,11 +258,21 @@ export function SimulatorPage() {
       ? `http://localhost:5167/api/incoming-webhooks/${selectedEndpoint.slug}`
       : 'http://localhost:5167/api/incoming-webhooks/{slug}'
     const compactPayload = payload.replace(/\s+/g, ' ').trim()
+
+    let signatureHeaderPart = ''
+    if (selectedEndpoint && signatureMode !== 'NoSignature') {
+      const headerKey = selectedEndpoint.signatureHeaderName || 'X-Webhook-Signature'
+      const sigVal = signatureMode === 'ValidSignature' 
+        ? `sha256=${computedSignature || 'computing...'}` 
+        : 'sha256=invalid_signature_hash_0000000000'
+      signatureHeaderPart = `  -H "${headerKey}: ${sigVal}" \\\n`
+    }
+
     return `curl -X POST "${url}" \\
   -H "Content-Type: application/json" \\
   -H "X-Webhook-Event: ${eventType}" \\
-  -d '${compactPayload}'`
-  }, [selectedEndpoint, eventType, payload])
+${signatureHeaderPart}  -d '${compactPayload}'`
+  }, [selectedEndpoint, eventType, payload, signatureMode, computedSignature])
 
   // ── Preset Handler ─────────────────────────────────────────────────────────
   const applyPreset = useCallback((key: string) => {
@@ -220,14 +291,32 @@ export function SimulatorPage() {
 
     const startTime = performance.now()
     try {
+      const compactPayload = payload.replace(/\s+/g, ' ').trim()
+      const customHeaders: Record<string, string> = {
+        'X-Webhook-Event': eventType,
+        'X-Webhook-Id': `sim-${Date.now()}`,
+        'Content-Type': 'application/json',
+      }
+
+      if (signatureMode !== 'NoSignature') {
+        const headerKey = selectedEndpoint.signatureHeaderName || 'X-Webhook-Signature'
+        if (signatureMode === 'ValidSignature' && secretKey) {
+          try {
+            const signature = await computeHmacSha256(secretKey, compactPayload)
+            customHeaders[headerKey] = `sha256=${signature}`
+          } catch (err) {
+            console.error("Failed to sign payload", err)
+          }
+        } else if (signatureMode === 'InvalidSignature') {
+          customHeaders[headerKey] = 'sha256=invalid_signature_hash_0000000000'
+        }
+      }
+
       const res = await api.post(
         `/incoming-webhooks/${selectedEndpoint.slug}`,
-        JSON.parse(payload),
+        compactPayload, // Send compacted payload directly as string
         {
-          headers: {
-            'X-Webhook-Event': eventType,
-            'X-Webhook-Id': `sim-${Date.now()}`,
-          },
+          headers: customHeaders,
         }
       )
       const latencyMs = Math.round(performance.now() - startTime)
@@ -250,7 +339,7 @@ export function SimulatorPage() {
     } finally {
       setIsSending(false)
     }
-  }, [canSend, selectedEndpoint, payload, eventType])
+  }, [canSend, selectedEndpoint, payload, eventType, signatureMode, secretKey])
 
   // ── Render ─────────────────────────────────────────────────────────────────
   const isLoading = projectsLoading || endpointsLoading
@@ -387,6 +476,54 @@ export function SimulatorPage() {
                     Sent as <code className="text-hf-accent">X-Webhook-Event</code> header — backend will auto-extract this as the event type
                   </p>
                 </div>
+
+                {/* Signature Mode */}
+                {selectedEndpoint && (
+                  <div>
+                    <label className="block text-xs font-semibold text-hf-text-sec mb-2">Signature Mode</label>
+                    <div className="grid grid-cols-3 gap-2 bg-hf-bg p-1 rounded-xl border border-hf-border">
+                      {(['NoSignature', 'ValidSignature', 'InvalidSignature'] as const).map(mode => {
+                        const isSelected = signatureMode === mode
+                        const label = mode === 'NoSignature' 
+                          ? 'No signature' 
+                          : mode === 'ValidSignature' 
+                            ? 'Valid signature' 
+                            : 'Invalid signature'
+                        
+                        return (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setSignatureMode(mode)}
+                            className={`py-1.5 px-2.5 rounded-lg text-xs font-semibold transition-all select-none ${
+                              isSelected
+                                ? mode === 'ValidSignature'
+                                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-glow-sm'
+                                  : mode === 'InvalidSignature'
+                                    ? 'bg-red-500/10 text-red-400 border border-red-500/20 shadow-glow-sm'
+                                    : 'bg-hf-card text-hf-text border border-hf-border shadow-card'
+                                : 'text-hf-text-sec hover:text-hf-text hover:bg-hf-hover border border-transparent'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                    <p className="text-[10px] text-hf-muted mt-1.5 leading-relaxed">
+                      {signatureMode === 'NoSignature' && 'No signature header will be sent. Test insecure delivery.'}
+                      {signatureMode === 'ValidSignature' && (
+                        <span>
+                          Signs the payload with the endpoint secret key and sends in{' '}
+                          <code className="text-emerald-400 font-mono font-bold bg-emerald-500/5 px-1 py-0.5 rounded">
+                            {selectedEndpoint.signatureHeaderName || 'X-Webhook-Signature'}
+                          </code>.
+                        </span>
+                      )}
+                      {signatureMode === 'InvalidSignature' && 'Sends a corrupted/invalid HMAC hash in the signature header.'}
+                    </p>
+                  </div>
+                )}
 
                 {/* Payload editor */}
                 <div>
@@ -586,8 +723,8 @@ export function SimulatorPage() {
                 Copy the cURL command to test directly from your terminal
               </li>
               <li className="flex gap-2">
-                <span className="text-violet-400 flex-shrink-0 mt-0.5">•</span>
-                Signature verification coming in a future version
+                <span className="text-emerald-400 flex-shrink-0 mt-0.5">•</span>
+                Signature verification computes the actual HMAC SHA256 of the payload using your endpoint secret key.
               </li>
             </ul>
           </div>

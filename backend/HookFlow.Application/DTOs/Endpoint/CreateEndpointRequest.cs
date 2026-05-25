@@ -7,6 +7,7 @@ public class CreateEndpointRequest
     public string? Description { get; set; }
     public string Provider { get; set; } = "Generic";
     public string[]? AllowedEventTypes { get; set; }
+    public bool VerifySignature { get; set; } = false;
     public string SignatureHeaderName { get; set; } = "X-Webhook-Signature";
     public bool RejectInvalidSignature { get; set; } = false;
     public int MaxRetryAttempts { get; set; } = 5;
