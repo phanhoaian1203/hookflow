@@ -36,7 +36,7 @@ jobs:
         run: npm ci
 
       - name: Run ESLint Check
-        run: npm run lint
+        run: npm run lint -- --quiet
 
       - name: Build Application
         run: npm run build
