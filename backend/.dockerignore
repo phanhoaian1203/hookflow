@@ -1,0 +1,11 @@
+**/*.user
+**/*.suo
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/out/
+**/dist/
+.git/
+.github/
+.idea/

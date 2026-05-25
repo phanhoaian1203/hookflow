@@ -144,6 +144,7 @@ const mockAttempts: ProcessingAttempt[] = [
 export const mockEvents: WebhookEvent[] = [
   {
     id: 'evt_001',
+    externalEventId: null,
     eventType: 'payment.success',
     endpointId: 'ep_001',
     endpointName: 'Payment Success',
@@ -180,6 +181,7 @@ export const mockEvents: WebhookEvent[] = [
   },
   {
     id: 'evt_002',
+    externalEventId: null,
     eventType: 'github.push',
     endpointId: 'ep_003',
     endpointName: 'Push Events',
@@ -214,6 +216,7 @@ export const mockEvents: WebhookEvent[] = [
   },
   {
     id: 'evt_003',
+    externalEventId: null,
     eventType: 'order.created',
     endpointId: 'ep_002',
     endpointName: 'Order Created',
@@ -241,6 +244,7 @@ export const mockEvents: WebhookEvent[] = [
   },
   {
     id: 'evt_004',
+    externalEventId: null,
     eventType: 'payment.failed',
     endpointId: 'ep_001',
     endpointName: 'Payment Success',
@@ -263,6 +267,7 @@ export const mockEvents: WebhookEvent[] = [
   },
   {
     id: 'evt_005',
+    externalEventId: null,
     eventType: 'deployment.finished',
     endpointId: 'ep_003',
     endpointName: 'Push Events',
@@ -284,6 +289,7 @@ export const mockEvents: WebhookEvent[] = [
   },
   {
     id: 'evt_006',
+    externalEventId: null,
     eventType: 'payment.success',
     endpointId: 'ep_001',
     endpointName: 'Payment Success',

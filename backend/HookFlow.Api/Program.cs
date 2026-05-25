@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using HookFlow.Infrastructure.Persistence;
 using Serilog;
 using Scalar.AspNetCore;
 using HookFlow.Infrastructure;
@@ -22,11 +24,15 @@ try
         .WriteTo.Console());
 
     // --- Configure CORS ---
+    var allowedOrigins = builder.Configuration["Cors:AllowedOrigins"]?
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        ?? new[] { "http://localhost:5173", "http://localhost:5174", "http://localhost:5175" };
+
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("CorsPolicy", policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:5174", "http://localhost:5175")
+            policy.WithOrigins(allowedOrigins)
                   .AllowAnyHeader()
                   .AllowAnyMethod()
                   .AllowCredentials();
@@ -70,6 +76,22 @@ try
     builder.Services.AddOpenApi();
 
     var app = builder.Build();
+
+    // --- Apply Database Migrations on Startup ---
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var context = services.GetRequiredService<HookFlowDbContext>();
+            context.Database.Migrate();
+            Log.Information("Database migrated successfully.");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while migrating the database.");
+        }
+    }
 
     // --- Configure HTTP Request Pipeline ---
     app.UseSerilogRequestLogging();

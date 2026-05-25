@@ -34,6 +34,7 @@ export interface ProcessingAttempt {
 // ─── Webhook Event ───────────────────────────────────────────────
 export interface WebhookEvent {
   id: string
+  externalEventId: string | null
   eventType: string
   endpointId: string
   endpointName: string
