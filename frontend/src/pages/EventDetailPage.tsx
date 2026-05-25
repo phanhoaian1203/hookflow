@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { api } from '@/lib/api'
@@ -12,6 +12,44 @@ import { formatDate, formatRelativeTime, formatMs } from '@/lib/utils'
 import type { WebhookEvent } from '@/types/event.types'
 
 type Tab = 'payload' | 'headers' | 'attempts'
+
+// Dynamic syntax highlighter for raw JSON
+const HighlightedJson = ({ json }: { json: object }) => {
+  const jsonStr = JSON.stringify(json, null, 2)
+  return (
+    <pre className="text-xs leading-relaxed font-mono">
+      {jsonStr.split('\n').map((line, i) => {
+        const keyMatch = line.match(/^(\s*)("[\w-]+"):(.+)$/)
+        if (keyMatch) {
+          const key = keyMatch[2]
+          const val = keyMatch[3]
+          
+          let valElement = <span className="text-hf-text-sec">{val}</span>
+          const trimmedVal = val.trim()
+          if (trimmedVal.startsWith('"')) {
+            valElement = <span className="text-amber-300">{val}</span>
+          } else if (trimmedVal === 'true' || trimmedVal === 'false' || trimmedVal === 'true,' || trimmedVal === 'false,') {
+            valElement = <span className="text-purple-400 font-semibold">{val}</span>
+          } else if (!isNaN(Number(trimmedVal.replace(/,$/, '')))) {
+            valElement = <span className="text-blue-400 font-semibold">{val}</span>
+          } else if (trimmedVal.startsWith('null')) {
+            valElement = <span className="text-hf-muted font-medium">{val}</span>
+          }
+
+          return (
+            <div key={i} className="flex flex-wrap items-center">
+              <span>{keyMatch[1]}</span>
+              <span className="text-blue-400 font-medium">{key}</span>
+              <span className="text-hf-text-sec">:</span>
+              {valElement}
+            </div>
+          )
+        }
+        return <div key={i} className="text-hf-text-sec">{line}</div>
+      })}
+    </pre>
+  )
+}
 
 export function EventDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -130,44 +168,6 @@ export function EventDetailPage() {
     { id: 'headers',  label: 'Headers' },
     { id: 'attempts', label: `Processing Attempts (${event.processingAttempts?.length ?? 0})` },
   ]
-
-  // Dynamic syntax highlighter for raw JSON
-  const HighlightedJson = ({ json }: { json: object }) => {
-    const jsonStr = JSON.stringify(json, null, 2)
-    return (
-      <pre className="text-xs leading-relaxed font-mono">
-        {jsonStr.split('\n').map((line, i) => {
-          const keyMatch = line.match(/^(\s*)("[\w\-]+"):(.+)$/)
-          if (keyMatch) {
-            const key = keyMatch[2]
-            const val = keyMatch[3]
-            
-            let valElement = <span className="text-hf-text-sec">{val}</span>
-            const trimmedVal = val.trim()
-            if (trimmedVal.startsWith('"')) {
-              valElement = <span className="text-amber-300">{val}</span>
-            } else if (trimmedVal === 'true' || trimmedVal === 'false' || trimmedVal === 'true,' || trimmedVal === 'false,') {
-              valElement = <span className="text-purple-400 font-semibold">{val}</span>
-            } else if (!isNaN(Number(trimmedVal.replace(/,$/, '')))) {
-              valElement = <span className="text-blue-400 font-semibold">{val}</span>
-            } else if (trimmedVal.startsWith('null')) {
-              valElement = <span className="text-hf-muted font-medium">{val}</span>
-            }
-
-            return (
-              <div key={i} className="flex flex-wrap items-center">
-                <span>{keyMatch[1]}</span>
-                <span className="text-blue-400 font-medium">{key}</span>
-                <span className="text-hf-text-sec">:</span>
-                {valElement}
-              </div>
-            )
-          }
-          return <div key={i} className="text-hf-text-sec">{line}</div>
-        })}
-      </pre>
-    )
-  }
 
   return (
     <div className="space-y-5 animate-fade-in">
