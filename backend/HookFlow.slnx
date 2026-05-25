@@ -4,4 +4,5 @@
   <Project Path="HookFlow.Domain/HookFlow.Domain.csproj" />
   <Project Path="HookFlow.Infrastructure/HookFlow.Infrastructure.csproj" />
   <Project Path="HookFlow.Tests/HookFlow.Tests.csproj" />
+  <Project Path="HookFlow.Worker/HookFlow.Worker.csproj" />
 </Solution>

@@ -23,15 +23,15 @@ services:
     container_name: hookflow-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-hookflow}
-      POSTGRES_USER: ${POSTGRES_USER:-hookflow}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hookflow_secret}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hookflow} -d ${POSTGRES_DB:-hookflow}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -52,10 +52,10 @@ services:
       ASPNETCORE_URLS: http://+:5000
       ConnectionStrings__DefaultConnection: >
         Host=postgres;Port=5432;
-        Database=${POSTGRES_DB:-hookflow};
-        Username=${POSTGRES_USER:-hookflow};
-        Password=${POSTGRES_PASSWORD:-hookflow_secret}
-      Jwt__Secret: ${JWT_SECRET:-your_super_secret_jwt_key_that_is_at_least_256_bits_long_hookflow}
+        Database=${POSTGRES_DB};
+        Username=${POSTGRES_USER};
+        Password=${POSTGRES_PASSWORD}
+      Jwt__Secret: ${JWT_SECRET}
       Jwt__Issuer: ${JWT_ISSUER:-HookFlow}
       Jwt__Audience: ${JWT_AUDIENCE:-HookFlowUsers}
       Jwt__AccessTokenExpiryMinutes: ${JWT_ACCESS_EXPIRY:-60}
@@ -114,31 +114,25 @@ services:
 #    networks:
 #      - hookflow-net
 #
-#  # Webhook Worker
-#  webhook-worker:
-#    build:
-#      context: ./backend
-#      dockerfile: Dockerfile.worker
-#    container_name: hookflow-worker
-#    restart: unless-stopped
-#    environment:
-#      DOTNET_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-#      ConnectionStrings__DefaultConnection: >
-#        Host=postgres;Port=5432;
-#        Database=${POSTGRES_DB:-hookflow};
-#        Username=${POSTGRES_USER:-hookflow};
-#        Password=${POSTGRES_PASSWORD:-hookflow_secret}
-#      ConnectionStrings__Redis: "redis:6379,password=${REDIS_PASSWORD:-redis_secret}"
-#      Worker__PollIntervalSeconds: ${WORKER_POLL_INTERVAL:-5}
-#      Worker__MaxConcurrency: ${WORKER_MAX_CONCURRENCY:-5}
-#      Worker__MaxRetryAttempts: ${WORKER_MAX_RETRY:-5}
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      redis:
-#        condition: service_healthy
-#    networks:
-#      - hookflow-net
+  # Webhook Worker
+  webhook-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    container_name: hookflow-worker
+    restart: unless-stopped
+    environment:
+      DOTNET_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ConnectionStrings__DefaultConnection: >
+        Host=postgres;Port=5432;
+        Database=${POSTGRES_DB};
+        Username=${POSTGRES_USER};
+        Password=${POSTGRES_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - hookflow-net
 #
 #  # Nginx — Reverse Proxy
 #  nginx:

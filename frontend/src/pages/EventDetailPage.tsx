@@ -332,15 +332,65 @@ export function EventDetailPage() {
                   Webhook Processing Attempts
                 </div>
                 
-                <div className="text-center py-16 border border-dashed border-hf-border rounded-xl bg-hf-bg/5 space-y-2">
-                  <div className="w-10 h-10 rounded-full bg-hf-hover border border-hf-border flex items-center justify-center mx-auto text-hf-muted">
-                    <Server size={18} />
+                {!event.processingAttempts || event.processingAttempts.length === 0 ? (
+                  <div className="text-center py-16 border border-dashed border-hf-border rounded-xl bg-hf-bg/5 space-y-2">
+                    <div className="w-10 h-10 rounded-full bg-hf-hover border border-hf-border flex items-center justify-center mx-auto text-hf-muted">
+                      <Server size={18} />
+                    </div>
+                    <h4 className="text-xs font-semibold text-hf-text">No delivery attempts yet</h4>
+                    <p className="text-[11px] text-hf-muted max-w-sm mx-auto leading-relaxed">
+                      This event is currently in the **Pending** queue. Once the asynchronous worker processes it, retry history and delivery diagnostics will appear here.
+                    </p>
                   </div>
-                  <h4 className="text-xs font-semibold text-hf-text">No delivery attempts yet</h4>
-                  <p className="text-[11px] text-hf-muted max-w-sm mx-auto leading-relaxed">
-                    This event is currently in the **Pending** queue. Once the asynchronous worker processes it, retry history and delivery diagnostics will appear here.
-                  </p>
-                </div>
+                ) : (
+                  <div className="space-y-3">
+                    {event.processingAttempts.map((attempt) => (
+                      <div key={attempt.id} className="card p-4 border border-hf-border hover:border-hf-border/80 transition-colors bg-hf-bg/5 space-y-3">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-6 h-6 rounded-full bg-hf-hover border border-hf-border text-[10px] font-bold flex items-center justify-center text-hf-text-sec">
+                              #{attempt.attemptNumber}
+                            </span>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider ${
+                              attempt.status === 'Success' 
+                                ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                                : 'bg-red-500/10 text-red-400 border border-red-500/20'
+                            }`}>
+                              {attempt.status}
+                            </span>
+                            <span className="text-[10px] text-hf-muted font-mono select-all">
+                              ID: {attempt.id}
+                            </span>
+                          </div>
+                          
+                          <div className="text-[10px] text-hf-muted flex items-center gap-3">
+                            <span>Duration: <strong className="text-hf-text-sec">{formatMs(attempt.durationMs ?? 0)}</strong></span>
+                            <span>•</span>
+                            <span>Worker: <strong className="text-hf-text-sec">{attempt.workerName ?? 'unknown'}</strong></span>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs pt-1 border-t border-hf-border/40">
+                          <div>
+                            <span className="text-[10px] text-hf-muted uppercase font-semibold block mb-0.5">Started At</span>
+                            <span className="text-hf-text-sec font-mono">{formatDate(attempt.startedAt)}</span>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-hf-muted uppercase font-semibold block mb-0.5">Finished At</span>
+                            <span className="text-hf-text-sec font-mono">{attempt.finishedAt ? formatDate(attempt.finishedAt) : '—'}</span>
+                          </div>
+                        </div>
+                        
+                        {attempt.errorMessage && (
+                          <div className="mt-2 text-xs border border-red-500/10 bg-red-500/5 p-2.5 rounded-lg font-mono text-red-400 break-all select-all">
+                            <span className="font-semibold block text-[9px] uppercase tracking-wider text-red-400/70 mb-1">Error Message</span>
+                            {attempt.errorMessage}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

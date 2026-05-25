@@ -98,6 +98,7 @@ public class WebhookEventService : IWebhookEventService
         var webhookEvent = await _context.WebhookEvents
             .Include(e => e.Endpoint)
             .ThenInclude(ep => ep.Project)
+            .Include(e => e.ProcessingAttempts)
             .FirstOrDefaultAsync(e => e.Id == eventId);
 
         if (webhookEvent == null || webhookEvent.Endpoint.Project.OwnerId != userId)
@@ -130,7 +131,22 @@ public class WebhookEventService : IWebhookEventService
             ErrorMessage = ev.ErrorMessage,
             ReceivedAt = ev.ReceivedAt,
             ProcessedAt = ev.ProcessedAt,
-            CreatedAt = ev.CreatedAt
+            CreatedAt = ev.CreatedAt,
+            ProcessingAttempts = ev.ProcessingAttempts?
+                .OrderBy(a => a.AttemptNumber)
+                .Select(a => new ProcessingAttemptDto
+                {
+                    Id = a.Id,
+                    WebhookEventId = a.WebhookEventId,
+                    AttemptNumber = a.AttemptNumber,
+                    Status = a.Status,
+                    StartedAt = a.StartedAt,
+                    FinishedAt = a.FinishedAt,
+                    DurationMs = a.DurationMs,
+                    ErrorMessage = a.ErrorMessage,
+                    WorkerName = a.WorkerName,
+                    CreatedAt = a.CreatedAt
+                }).ToList() ?? []
         };
     }
 

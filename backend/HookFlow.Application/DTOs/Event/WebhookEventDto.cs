@@ -19,4 +19,5 @@ public class WebhookEventDto
     public DateTime ReceivedAt { get; set; }
     public DateTime? ProcessedAt { get; set; }
     public DateTime CreatedAt { get; set; }
+    public ICollection<ProcessingAttemptDto> ProcessingAttempts { get; set; } = [];
 }
