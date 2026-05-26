@@ -46,6 +46,9 @@ try
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddApplication();
 
+    // Register Webhook Worker as a hosted service to run in-process (highly optimized for Render Free Tier)
+    builder.Services.AddHostedService<HookFlow.Worker.WebhookWorker>();
+
     // --- Configure JWT Authentication ---
     var secretKey = builder.Configuration["Jwt:Secret"] ?? "your_super_secret_jwt_key_that_is_at_least_256_bits_long_hookflow";
     var key = Encoding.UTF8.GetBytes(secretKey);

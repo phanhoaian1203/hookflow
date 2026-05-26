@@ -21,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\HookFlow.Infrastructure\HookFlow.Infrastructure.csproj" />
     <ProjectReference Include="..\HookFlow.Application\HookFlow.Application.csproj" />
+    <ProjectReference Include="..\HookFlow.Worker\HookFlow.Worker.csproj" />
   </ItemGroup>
 
 </Project>
