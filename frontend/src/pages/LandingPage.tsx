@@ -18,7 +18,7 @@ interface TerminalTab {
   logs: string[]
 }
 
-const terminalTabs: Record<string, TerminalTab> = {
+const terminalTabs: Record<'stripe' | 'github' | 'shopify' | 'sentry', TerminalTab> = {
   stripe: {
     name: 'Stripe',
     method: 'POST',
