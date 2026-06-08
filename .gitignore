@@ -66,6 +66,8 @@ coverage*.info
 # Publish output
 publish/
 **/publish/
+publish_test/
+**/publish_test/
 **/Properties/launchSettings.json
 
 # Secret / environment files
