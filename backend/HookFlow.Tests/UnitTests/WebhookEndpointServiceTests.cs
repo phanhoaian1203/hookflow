@@ -8,9 +8,7 @@ namespace HookFlow.Tests.UnitTests;
 
 public class WebhookEndpointServiceTests
 {
-    // ────────────────────────────────────────────────────────
-    // Helpers
-    // ────────────────────────────────────────────────────────
+
 
     private static (TestDbContext ctx, Guid userId, Guid projectId) BuildContext()
     {
@@ -48,9 +46,6 @@ public class WebhookEndpointServiceTests
         return (ctx, userId, projectId);
     }
 
-    // ────────────────────────────────────────────────────────
-    // GetProjectEndpointsAsync
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task GetProjectEndpointsAsync_ReturnsAllEndpointsOfProject()
@@ -74,9 +69,6 @@ public class WebhookEndpointServiceTests
             () => svc.GetProjectEndpointsAsync(projectId, strangerUserId));
     }
 
-    // ────────────────────────────────────────────────────────
-    // GetEndpointByIdAsync
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task GetEndpointByIdAsync_ReturnsEndpoint_WhenOwned()
@@ -100,9 +92,6 @@ public class WebhookEndpointServiceTests
             () => svc.GetEndpointByIdAsync(Guid.NewGuid(), userId));
     }
 
-    // ────────────────────────────────────────────────────────
-    // CreateEndpointAsync
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task CreateEndpointAsync_CreatesEndpoint_WithSlugAndSecret()
@@ -177,9 +166,6 @@ public class WebhookEndpointServiceTests
             () => svc.CreateEndpointAsync(request, strangerUserId));
     }
 
-    // ────────────────────────────────────────────────────────
-    // ToggleEndpointActiveAsync
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task ToggleEndpointActiveAsync_FlipsIsActive()
@@ -199,9 +185,7 @@ public class WebhookEndpointServiceTests
         Assert.True(dto2.IsActive);
     }
 
-    // ────────────────────────────────────────────────────────
-    // RotateSecretAsync
-    // ────────────────────────────────────────────────────────
+
 
     [Fact]
     public async Task RotateSecretAsync_ReturnsNewSecret_WithCorrectPrefix()
@@ -217,9 +201,7 @@ public class WebhookEndpointServiceTests
         Assert.NotEqual(oldSecret, newSecret);
     }
 
-    // ────────────────────────────────────────────────────────
-    // DeleteEndpointAsync
-    // ────────────────────────────────────────────────────────
+
 
     [Fact]
     public async Task DeleteEndpointAsync_RemovesEndpoint_WhenOwned()
@@ -246,9 +228,6 @@ public class WebhookEndpointServiceTests
             () => svc.DeleteEndpointAsync(endpointId, strangerUserId));
     }
 
-    // ────────────────────────────────────────────────────────
-    // GenerateSlug (via CreateEndpointAsync)
-    // ────────────────────────────────────────────────────────
 
     [Theory]
     [InlineData("My Endpoint Name", "my-endpoint-name")]
