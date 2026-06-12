@@ -9,9 +9,7 @@ namespace HookFlow.Tests.UnitTests;
 
 public class IncomingWebhookServiceTests
 {
-    // ────────────────────────────────────────────────────────
-    // Helpers
-    // ────────────────────────────────────────────────────────
+
 
     private static (TestDbContext ctx, WebhookEndpoint endpoint) BuildContext(
         bool isActive = true,
@@ -54,9 +52,6 @@ public class IncomingWebhookServiceTests
         return mock;
     }
 
-    // ────────────────────────────────────────────────────────
-    // Slug validation
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task ProcessIncomingWebhookAsync_Throws_WhenSlugIsEmpty()
@@ -78,9 +73,6 @@ public class IncomingWebhookServiceTests
             () => svc.ProcessIncomingWebhookAsync("nonexistent-slug", "{}", new Dictionary<string, string>(), null));
     }
 
-    // ────────────────────────────────────────────────────────
-    // Inactive endpoint
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task ProcessIncomingWebhookAsync_Throws_WhenEndpointIsInactive()
@@ -92,9 +84,7 @@ public class IncomingWebhookServiceTests
             () => svc.ProcessIncomingWebhookAsync(endpoint.Slug, "{}", new Dictionary<string, string>(), null));
     }
 
-    // ────────────────────────────────────────────────────────
-    // Happy path - no signature
-    // ────────────────────────────────────────────────────────
+
 
     [Fact]
     public async Task ProcessIncomingWebhookAsync_SavesEvent_AndReturnsPendingStatus()
@@ -116,9 +106,7 @@ public class IncomingWebhookServiceTests
         Assert.Null(savedEvent.SignatureValid);  // không verify -> null
     }
 
-    // ────────────────────────────────────────────────────────
-    // Event type & external ID extraction
-    // ────────────────────────────────────────────────────────
+
 
     [Fact]
     public async Task ProcessIncomingWebhookAsync_ExtractsEventType_FromHeader()
@@ -172,9 +160,7 @@ public class IncomingWebhookServiceTests
         Assert.Equal("delivery-id-xyz", ev!.ExternalEventId);
     }
 
-    // ────────────────────────────────────────────────────────
-    // Signature verification
-    // ────────────────────────────────────────────────────────
+
 
     [Fact]
     public async Task ProcessIncomingWebhookAsync_SetsSignatureValid_True_WhenSignatureOk()
