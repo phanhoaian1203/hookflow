@@ -9,9 +9,7 @@ namespace HookFlow.Tests.UnitTests;
 
 public class WebhookEventServiceTests
 {
-    // ────────────────────────────────────────────────────────
-    // Helpers
-    // ────────────────────────────────────────────────────────
+
 
     private static (TestDbContext ctx, Guid userId, Guid projectId, Guid endpointId) BuildContext()
     {
@@ -69,9 +67,7 @@ public class WebhookEventServiceTests
         return (ctx, userId, projectId, endpointId);
     }
 
-    // ────────────────────────────────────────────────────────
-    // GetEventsAsync
-    // ────────────────────────────────────────────────────────
+
 
     [Fact]
     public async Task GetEventsAsync_ReturnsAllEvents_WithNoFilters()
@@ -184,9 +180,6 @@ public class WebhookEventServiceTests
         Assert.Equal(2, result.TotalItems);
     }
 
-    // ────────────────────────────────────────────────────────
-    // GetEventByIdAsync
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task GetEventByIdAsync_ReturnsEvent_WhenOwned()
@@ -221,9 +214,6 @@ public class WebhookEventServiceTests
             () => svc.GetEventByIdAsync(Guid.NewGuid(), userId));
     }
 
-    // ────────────────────────────────────────────────────────
-    // ReplayEventAsync
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task ReplayEventAsync_ResetsToPending_WhenFailed()
@@ -273,9 +263,7 @@ public class WebhookEventServiceTests
             () => svc.ReplayEventAsync(eventId, Guid.NewGuid()));
     }
 
-    // ────────────────────────────────────────────────────────
-    // IgnoreEventAsync
-    // ────────────────────────────────────────────────────────
+
 
     [Fact]
     public async Task IgnoreEventAsync_SetsIgnoredStatus_WhenFailed()
