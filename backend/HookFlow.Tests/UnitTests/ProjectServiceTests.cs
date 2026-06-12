@@ -8,9 +8,7 @@ namespace HookFlow.Tests.UnitTests;
 
 public class ProjectServiceTests
 {
-    // ────────────────────────────────────────────────────────
-    // Helpers
-    // ────────────────────────────────────────────────────────
+
 
     private static (TestDbContext ctx, Guid userId, Guid otherUserId) BuildContext()
     {
@@ -34,9 +32,7 @@ public class ProjectServiceTests
         return (ctx, userId, otherUserId);
     }
 
-    // ────────────────────────────────────────────────────────
-    // GetUserProjectsAsync
-    // ────────────────────────────────────────────────────────
+
 
     [Fact]
     public async Task GetUserProjectsAsync_ReturnsOnlyOwnedProjects()
@@ -62,9 +58,6 @@ public class ProjectServiceTests
         Assert.Empty(result);
     }
 
-    // ────────────────────────────────────────────────────────
-    // GetProjectByIdAsync
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task GetProjectByIdAsync_ReturnsProject_WhenOwnerMatches()
@@ -99,9 +92,7 @@ public class ProjectServiceTests
             () => svc.GetProjectByIdAsync(Guid.NewGuid(), userId));
     }
 
-    // ────────────────────────────────────────────────────────
-    // CreateProjectAsync
-    // ────────────────────────────────────────────────────────
+
 
     [Fact]
     public async Task CreateProjectAsync_ReturnsNewProject_WithCorrectOwner()
@@ -133,9 +124,6 @@ public class ProjectServiceTests
         Assert.Equal(userId, saved!.OwnerId);
     }
 
-    // ────────────────────────────────────────────────────────
-    // UpdateProjectAsync
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task UpdateProjectAsync_UpdatesNameAndStatus()
@@ -169,9 +157,6 @@ public class ProjectServiceTests
             () => svc.UpdateProjectAsync(bobProjectId, request, userId));
     }
 
-    // ────────────────────────────────────────────────────────
-    // DeleteProjectAsync
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task DeleteProjectAsync_RemovesProject_WhenOwner()
