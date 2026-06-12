@@ -9,9 +9,7 @@ namespace HookFlow.Tests.UnitTests;
 
 public class AuthServiceTests
 {
-    // ────────────────────────────────────────────────────────
-    // Helpers
-    // ────────────────────────────────────────────────────────
+
 
     private static (TestDbContext ctx, Mock<IPasswordHasher> hasher, Mock<IJwtTokenGenerator> jwt) BuildMocks()
     {
@@ -29,9 +27,7 @@ public class AuthServiceTests
         return (ctx, hasher, jwt);
     }
 
-    // ────────────────────────────────────────────────────────
-    // RegisterAsync
-    // ────────────────────────────────────────────────────────
+
 
     [Fact]
     public async Task RegisterAsync_ReturnsAuthResponse_WithAccessToken()
@@ -112,9 +108,6 @@ public class AuthServiceTests
         hasher.Verify(h => h.HashPassword("plaintext"), Times.Once);
     }
 
-    // ────────────────────────────────────────────────────────
-    // LoginAsync
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task LoginAsync_ReturnsAuthResponse_WhenCredentialsValid()
@@ -195,9 +188,6 @@ public class AuthServiceTests
             () => svc.LoginAsync(new LoginRequest { Email = "alice@x.com", Password = "wrong" }));
     }
 
-    // ────────────────────────────────────────────────────────
-    // GetCurrentUserAsync
-    // ────────────────────────────────────────────────────────
 
     [Fact]
     public async Task GetCurrentUserAsync_ReturnsUserDto_WhenUserExists()
