@@ -29,7 +29,6 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request)
     {
-        // 1. Validate payload
         var validationResult = await _registerValidator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {
@@ -45,7 +44,6 @@ public class AuthController : ControllerBase
 
         try
         {
-            // 2. Register user
             var response = await _authService.RegisterAsync(request);
             return StatusCode(201, new
             {
@@ -70,7 +68,6 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        // 1. Validate payload
         var validationResult = await _loginValidator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {
@@ -111,7 +108,6 @@ public class AuthController : ControllerBase
     [HttpGet("me")]
     public async Task<IActionResult> GetMe()
     {
-        // 1. Get user id from claims
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
         if (userIdClaim == null)
         {
