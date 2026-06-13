@@ -20,7 +20,6 @@ public class WebhookEndpointService : IWebhookEndpointService
 
     public async Task<IEnumerable<WebhookEndpointDto>> GetProjectEndpointsAsync(Guid projectId, Guid userId)
     {
-        // Verify project ownership
         var projectExists = await _context.Projects.AnyAsync(p => p.Id == projectId && p.OwnerId == userId);
         if (!projectExists)
         {
@@ -62,14 +61,12 @@ public class WebhookEndpointService : IWebhookEndpointService
 
     public async Task<(WebhookEndpointDto Endpoint, string PlainSecret)> CreateEndpointAsync(CreateEndpointRequest request, Guid userId)
     {
-        // Verify project ownership
         var project = await _context.Projects.FirstOrDefaultAsync(p => p.Id == request.ProjectId && p.OwnerId == userId);
         if (project == null)
         {
             throw new KeyNotFoundException("Project not found or you do not have permission to access it.");
         }
 
-        // Generate unique slug
         string baseSlug = GenerateSlug(request.Name);
         string finalSlug = baseSlug;
         bool exists = await _context.WebhookEndpoints.AnyAsync(e => e.Slug == finalSlug);
@@ -84,10 +81,8 @@ public class WebhookEndpointService : IWebhookEndpointService
             } while (await _context.WebhookEndpoints.AnyAsync(e => e.Slug == finalSlug));
         }
 
-        // Generate Secret Key
         string plainSecret = GenerateSecretKey();
 
-        // Parse Enums
         Enum.TryParse<WebhookProvider>(request.Provider, true, out var provider);
         Enum.TryParse<RetryStrategy>(request.RetryStrategy, true, out var retryStrategy);
 

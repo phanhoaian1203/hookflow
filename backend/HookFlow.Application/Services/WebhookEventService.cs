@@ -19,13 +19,11 @@ public class WebhookEventService : IWebhookEventService
 
     public async Task<PagedResult<WebhookEventDto>> GetEventsAsync(GetEventsRequest request, Guid userId)
     {
-        // 1. Ownership boundary: only query endpoints belonging to projects owned by this user
         var query = _context.WebhookEvents
             .Include(e => e.Endpoint)
             .ThenInclude(ep => ep.Project)
             .Where(e => e.Endpoint.Project.OwnerId == userId);
 
-        // 2. Apply Filters
         if (!string.IsNullOrWhiteSpace(request.Status))
         {
             var statuses = request.Status.Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -76,10 +74,8 @@ public class WebhookEventService : IWebhookEventService
             );
         }
 
-        // 3. Count Total Items before paging
         int totalItems = await query.CountAsync();
 
-        // 4. Order and Page
         int page = request.Page > 0 ? request.Page : 1;
         int pageSize = request.PageSize > 0 ? request.PageSize : 20;
 
@@ -127,7 +123,6 @@ public class WebhookEventService : IWebhookEventService
             throw new KeyNotFoundException("Webhook event not found or you do not have permission to access it.");
         }
 
-        // Only allow replaying certain statuses
         if (webhookEvent.Status == WebhookEventStatus.Processing)
         {
             throw new InvalidOperationException("Event is currently processing and cannot be replayed.");
@@ -153,7 +148,6 @@ public class WebhookEventService : IWebhookEventService
             throw new KeyNotFoundException("Webhook event not found or you do not have permission to access it.");
         }
 
-        // Only allow ignoring if it is Retrying or Dead or Failed
         if (webhookEvent.Status != WebhookEventStatus.Retrying && 
             webhookEvent.Status != WebhookEventStatus.Dead && 
             webhookEvent.Status != WebhookEventStatus.Failed)
