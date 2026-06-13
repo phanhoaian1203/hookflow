@@ -25,7 +25,6 @@ public class IncomingWebhookService : IIncomingWebhookService
             throw new ArgumentException("Slug cannot be empty.", nameof(slug));
         }
 
-        // 1. Find the endpoint by slug
         var endpoint = await _context.WebhookEndpoints
             .FirstOrDefaultAsync(e => e.Slug == slug);
 
@@ -34,24 +33,20 @@ public class IncomingWebhookService : IIncomingWebhookService
             throw new KeyNotFoundException($"Webhook endpoint not found with slug '{slug}'.");
         }
 
-        // 2. If endpoint is inactive, reject it
         if (!endpoint.IsActive)
         {
             throw new InvalidOperationException($"The requested webhook endpoint '{endpoint.Name}' is currently inactive.");
         }
 
-        // 3. Extract event metadata
         string eventType = ExtractEventType(headers, rawBody);
         string externalEventId = ExtractExternalEventId(headers, rawBody);
 
-        // 4. Perform Signature Verification if enabled
         bool? signatureValid = null;
         WebhookEventStatus eventStatus = WebhookEventStatus.Pending;
 
         if (endpoint.VerifySignature)
         {
             var headerKey = endpoint.SignatureHeaderName ?? "X-Webhook-Signature";
-            // Header lookup (case-insensitive)
             var signatureHeader = headers.FirstOrDefault(h => h.Key.Equals(headerKey, StringComparison.OrdinalIgnoreCase));
             
             if (string.IsNullOrEmpty(signatureHeader.Value))
@@ -70,7 +65,6 @@ public class IncomingWebhookService : IIncomingWebhookService
             }
         }
 
-        // 5. Create and save the webhook event
         var webhookEvent = new WebhookEvent
         {
             EndpointId = endpoint.Id,
@@ -90,7 +84,6 @@ public class IncomingWebhookService : IIncomingWebhookService
         _context.WebhookEvents.Add(webhookEvent);
         await _context.SaveChangesAsync();
 
-        // 6. If signature is invalid and endpoint is configured to reject invalid signatures, throw to reject HTTP request
         if (endpoint.VerifySignature && signatureValid == false && endpoint.RejectInvalidSignature)
         {
             throw new InvalidOperationException("Webhook signature verification failed. Request rejected.");
@@ -134,7 +127,6 @@ public class IncomingWebhookService : IIncomingWebhookService
             }
             catch
             {
-                // ignore parsing exceptions
             }
         }
 
@@ -174,7 +166,6 @@ public class IncomingWebhookService : IIncomingWebhookService
             }
             catch
             {
-                // ignore parsing exceptions
             }
         }
 

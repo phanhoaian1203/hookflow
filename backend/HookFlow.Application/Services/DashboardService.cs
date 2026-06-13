@@ -30,12 +30,10 @@ public class DashboardService : IDashboardService
         var deadEvents = await baseQuery.CountAsync(e => e.Status == WebhookEventStatus.Dead);
         var pendingEvents = await baseQuery.CountAsync(e => e.Status == WebhookEventStatus.Pending);
 
-        // Failure rate: failed + dead as % of total
         double failureRate = totalEvents > 0
             ? Math.Round((double)(failedEvents + deadEvents) / totalEvents * 100, 1)
             : 0;
 
-        // Average processing time: average of DurationMs of successful attempts
         var avgProcessingTimeMs = await _context.ProcessingAttempts
             .Include(a => a.WebhookEvent)
             .ThenInclude(e => e.Endpoint)
@@ -43,7 +41,6 @@ public class DashboardService : IDashboardService
             .Where(a => a.WebhookEvent.Endpoint.Project.OwnerId == userId && a.DurationMs.HasValue)
             .AverageAsync(a => (double?)a.DurationMs) ?? 0;
 
-        // Events today: events received since midnight UTC today
         var todayUtc = DateTime.UtcNow.Date;
         var eventsToday = await baseQuery.CountAsync(e => e.ReceivedAt >= todayUtc);
 
