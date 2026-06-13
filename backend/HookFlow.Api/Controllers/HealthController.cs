@@ -24,7 +24,6 @@ public class HealthController : ControllerBase
         }
         catch
         {
-            // Ignore connection errors and report unhealthy db
         }
 
         return Ok(new

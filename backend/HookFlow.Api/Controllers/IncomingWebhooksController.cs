@@ -19,13 +19,10 @@ public class IncomingWebhooksController : ControllerBase
     [HttpPost("{slug}")]
     public async Task<IActionResult> Receive(string slug)
     {
-        // Enable buffering so the request body can be read multiple times (e.g. for signature validation)
         Request.EnableBuffering();
 
-        // Read all headers
         var headers = Request.Headers.ToDictionary(h => h.Key, h => h.Value.ToString());
 
-        // Read raw body
         string rawBody = string.Empty;
         using (var reader = new System.IO.StreamReader(
             Request.Body, 
@@ -35,7 +32,6 @@ public class IncomingWebhooksController : ControllerBase
             leaveOpen: true))
         {
             rawBody = await reader.ReadToEndAsync();
-            // Reset position to allow future reads
             Request.Body.Position = 0;
         }
 
@@ -50,7 +46,6 @@ public class IncomingWebhooksController : ControllerBase
         {
             var eventId = await _incomingWebhookService.ProcessIncomingWebhookAsync(slug, rawBody, headers, sourceIp);
             
-            // Return 202 Accepted as webhooks are typically processed asynchronously
             return Accepted(new
             {
                 success = true,
