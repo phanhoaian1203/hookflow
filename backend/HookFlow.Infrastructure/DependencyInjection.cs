@@ -20,10 +20,8 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString, b => 
                 b.MigrationsAssembly(typeof(HookFlowDbContext).Assembly.FullName)));
 
-        // Register database context abstraction
         services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<HookFlowDbContext>());
 
-        // Register security services
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddSingleton<IWebhookSignatureVerifier, HmacSha256SignatureVerifier>();
