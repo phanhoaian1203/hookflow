@@ -123,7 +123,6 @@ public class ProjectsController : ControllerBase
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProjectRequest request)
     {
-        // 1. Validate payload
         var validationResult = await _updateValidator.ValidateAsync(request);
         if (!validationResult.IsValid)
         {

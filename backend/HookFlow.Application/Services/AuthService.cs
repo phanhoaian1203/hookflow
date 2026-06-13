@@ -71,7 +71,6 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse> LoginAsync(LoginRequest request)
     {
-        // 1. Find user by email
         var emailNormalized = request.Email.Trim().ToLower();
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == emailNormalized);
         if (user == null)
@@ -79,23 +78,19 @@ public class AuthService : IAuthService
             throw new UnauthorizedAccessException("Invalid email or password.");
         }
 
-        // 2. Check if user is active
         if (!user.IsActive)
         {
             throw new UnauthorizedAccessException("This account has been deactivated.");
         }
 
-        // 3. Verify password
         var isPasswordValid = _passwordHasher.VerifyPassword(request.Password, user.PasswordHash);
         if (!isPasswordValid)
         {
             throw new UnauthorizedAccessException("Invalid email or password.");
         }
 
-        // 4. Generate token
         var accessToken = _jwtTokenGenerator.GenerateToken(user);
 
-        // 5. Map to response
         return new AuthResponse
         {
             AccessToken = accessToken,
