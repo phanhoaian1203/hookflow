@@ -185,11 +185,6 @@ The live version of HookFlow is fully deployed using:
 
 ---
 
-## 👤 Demo Credentials
-You can quickly review the application on Vercel using the following pre-created demo account:
-* **Email address:** `demo@hookflow.com`
-* **Password:** `password123`
-
 ---
 
 ## 🗺️ Roadmap & Documentation Index
@@ -207,5 +202,4 @@ For exhaustive technical information, please explore our dedicated documentation
 
 ---
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
